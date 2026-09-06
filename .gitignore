@@ -1,0 +1,4 @@
+.godot/
+build/
+*.tpz
+ios_icon_1024.png.import

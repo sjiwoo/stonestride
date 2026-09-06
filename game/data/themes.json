@@ -1,0 +1,44 @@
+{
+  "themes": {
+    "neutral": {
+      "name": "Wastes",
+      "color": "3d3154",
+      "sky_top": "1b2440",
+      "sky_bottom": "3d3154",
+      "ground": "2e2a3d",
+      "weights": {"attack": 34, "speed": 33, "econ": 33}
+    },
+    "fire": {
+      "name": "Fiery path",
+      "color": "e05a4e",
+      "sky_top": "2e1626",
+      "sky_bottom": "5c2a2e",
+      "ground": "38222a",
+      "weights": {"attack": 60, "speed": 20, "econ": 20}
+    },
+    "forest": {
+      "name": "Forest path",
+      "color": "5aa06b",
+      "sky_top": "16261e",
+      "sky_bottom": "2c4a34",
+      "ground": "223326",
+      "weights": {"attack": 20, "speed": 20, "econ": 60}
+    },
+    "water": {
+      "name": "Water path",
+      "color": "5b9bd5",
+      "sky_top": "14202e",
+      "sky_bottom": "27455e",
+      "ground": "1e2b3a",
+      "weights": {"attack": 20, "speed": 60, "econ": 20}
+    },
+    "boss": {
+      "name": "Boss gate",
+      "color": "c79bf0",
+      "sky_top": "241633",
+      "sky_bottom": "45295e",
+      "ground": "2c1f3d",
+      "weights": {"attack": 34, "speed": 33, "econ": 33}
+    }
+  }
+}

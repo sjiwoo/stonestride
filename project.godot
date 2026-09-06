@@ -1,0 +1,34 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Stonestride"
+run/main_scene="res://game/scenes/boot.tscn"
+config/features=PackedStringArray("4.4", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Settings="*res://game/autoload/settings.gd"
+Game="*res://game/autoload/game.gd"
+Router="*res://game/autoload/scene_router.gd"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/handheld/orientation=1
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.106, 0.141, 0.251, 1)
+textures/vram_compression/import_etc2_astc=true
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"

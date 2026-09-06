@@ -1,0 +1,21 @@
+{
+  "cards": [
+    {"id": "sharpened_fists", "category": "attack", "rarity": "common", "name": "Sharpened fists", "desc": "Turret shots hit harder", "stat": "+15% damage", "effects": [{"stat": "damage_mult", "op": "mul", "value": 1.15}]},
+    {"id": "rapid_loaders", "category": "attack", "rarity": "common", "name": "Rapid loaders", "desc": "All turrets reload faster", "stat": "+15% fire rate", "effects": [{"stat": "fire_rate_mult", "op": "mul", "value": 1.15}]},
+    {"id": "heavy_knuckles", "category": "attack", "rarity": "common", "name": "Heavy knuckles", "desc": "Tapping enemies squashes harder", "stat": "+10 tap damage", "effects": [{"stat": "tap_damage", "op": "add", "value": 10}]},
+    {"id": "splintering_shells", "category": "attack", "rarity": "rare", "name": "Splintering shells", "desc": "Shots hit noticeably harder", "stat": "+40% damage", "effects": [{"stat": "damage_mult", "op": "mul", "value": 1.4}]},
+    {"id": "mount_mortar", "category": "attack", "rarity": "rare", "name": "Mount: spore mortar", "desc": "Bolts an AoE mortar onto the golem", "stat": "+1 AoE turret", "effects": [{"op": "mount", "value": "mortar"}]},
+    {"id": "overcharged_core", "category": "attack", "rarity": "epic", "name": "Overcharged core", "desc": "The fist slam devastates a wider ring", "stat": "+60% slam radius, +40 slam damage", "effects": [{"stat": "slam_radius", "op": "mul", "value": 1.6}, {"stat": "slam_damage", "op": "add", "value": 40}]},
+    {"id": "twin_cannons", "category": "attack", "rarity": "epic", "name": "Twin cannons", "desc": "Bolts a second cannon onto the golem", "stat": "+1 cannon turret", "effects": [{"op": "mount", "value": "cannon"}]},
+    {"id": "long_stride", "category": "speed", "rarity": "common", "name": "Long stride", "desc": "The golem covers ground with wider steps", "stat": "+12% march speed", "effects": [{"stat": "speed_mult", "op": "mul", "value": 1.12}]},
+    {"id": "stone_skin", "category": "speed", "rarity": "common", "name": "Stone skin", "desc": "Thicker hide shrugs off chip damage", "stat": "+25 max HP", "effects": [{"stat": "max_hp", "op": "add", "value": 25}]},
+    {"id": "shrug_it_off", "category": "speed", "rarity": "rare", "name": "Shrug it off", "desc": "Latched enemies slow the golem far less", "stat": "+30% latch resist", "effects": [{"stat": "latch_resist", "op": "add", "value": 0.3}]},
+    {"id": "surefooted", "category": "speed", "rarity": "rare", "name": "Surefooted", "desc": "A confident, rolling gait", "stat": "+25% march speed", "effects": [{"stat": "speed_mult", "op": "mul", "value": 1.25}]},
+    {"id": "unstoppable", "category": "speed", "rarity": "epic", "name": "Unstoppable", "desc": "Massive stride and hardened joints", "stat": "+35% speed, +40 max HP", "effects": [{"stat": "speed_mult", "op": "mul", "value": 1.35}, {"stat": "max_hp", "op": "add", "value": 40}]},
+    {"id": "coin_magnet", "category": "econ", "rarity": "common", "name": "Coin magnet", "desc": "Dropped coins fly to the golem automatically", "stat": "Auto-collect coins", "effects": [{"stat": "coin_magnet", "op": "flag", "value": true}]},
+    {"id": "bounty_hunter", "category": "econ", "rarity": "common", "name": "Bounty hunter", "desc": "Each kill pays out more", "stat": "+2 gold per kill", "effects": [{"stat": "gold_per_kill", "op": "add", "value": 2}]},
+    {"id": "deep_veins", "category": "econ", "rarity": "rare", "name": "Deep veins", "desc": "The mill digs gold from every meter", "stat": "+2 gold per meter", "effects": [{"stat": "gold_per_meter", "op": "add", "value": 2}]},
+    {"id": "card_counter", "category": "econ", "rarity": "rare", "name": "Card counter", "desc": "Study the deck between waves", "stat": "+1 reroll per draft", "effects": [{"stat": "rerolls_per_draft", "op": "add", "value": 1}]},
+    {"id": "golden_gears", "category": "econ", "rarity": "epic", "name": "Golden gears", "desc": "The whole golem runs on profit", "stat": "+3 gold/meter, +3 gold/kill", "effects": [{"stat": "gold_per_meter", "op": "add", "value": 3}, {"stat": "gold_per_kill", "op": "add", "value": 3}]}
+  ]
+}
