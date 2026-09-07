@@ -6,7 +6,7 @@ extends CanvasLayer
 signal finished(card: Dictionary)
 
 const CARD_CORNER := 16
-const AURA_PAD := 16.0
+const AURA_PAD := 24.0
 const FLAME_IDLE := 0.16
 const FLAME_SELECTED := 0.85
 

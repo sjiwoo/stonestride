@@ -6,7 +6,7 @@ extends CanvasLayer
 signal chosen(index: int)
 
 const GATE_CORNER := 14
-const AURA_PAD := 14.0
+const AURA_PAD := 20.0
 
 var choices: Array = []
 var drafts: RefCounted
