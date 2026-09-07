@@ -15,9 +15,12 @@ func _run() -> void:
 	await _capture("01_main_menu.png")
 	Game.start_run(42)
 	Router.goto("res://game/scenes/march.tscn", true)
-	await _settle(2.5)
-	await _capture("02_march.png")
+	await _settle(0.2)
 	var march := get_tree().current_scene
+	march.wave_cfg["goal_m"] = 100000.0
+	await _settle(9.0)
+	await _capture("02_march.png")
+	march.wave_cfg["goal_m"] = 60.0
 	march.wave_distance = 999999.0
 	await _settle(0.5)
 	await _capture("03_draft.png")

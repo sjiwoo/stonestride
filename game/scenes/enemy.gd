@@ -1,14 +1,14 @@
 class_name Enemy
 extends Node2D
-## Tiny monster: runs at the golem, latches on, chews HP, slows the march.
+## Tiny monster: runs at the golem, presses against its front, chews HP, slows the march.
 
 signal died(enemy: Enemy)
 
 const TYPES := {
-	"grunt": {"hp": 20.0, "speed": 110.0, "dps": 3.0, "radius": 10.0, "fill": "c94f4f", "line": "7e2e2e"},
-	"runner": {"hp": 12.0, "speed": 190.0, "dps": 2.0, "radius": 8.0, "fill": "b57edc", "line": "6b3f8a"},
-	"tank": {"hp": 55.0, "speed": 70.0, "dps": 6.0, "radius": 13.0, "fill": "5aa06b", "line": "2e5e3c"},
-	"boss": {"hp": 900.0, "speed": 55.0, "dps": 14.0, "radius": 34.0, "fill": "c79bf0", "line": "6b3f8a"},
+	"grunt": {"hp": 20.0, "speed": 110.0, "dps": 1.5, "radius": 10.0, "fill": "c94f4f", "line": "7e2e2e"},
+	"runner": {"hp": 12.0, "speed": 190.0, "dps": 1.2, "radius": 8.0, "fill": "b57edc", "line": "6b3f8a"},
+	"tank": {"hp": 55.0, "speed": 70.0, "dps": 3.5, "radius": 13.0, "fill": "5aa06b", "line": "2e5e3c"},
+	"boss": {"hp": 900.0, "speed": 55.0, "dps": 9.0, "radius": 34.0, "fill": "c79bf0", "line": "6b3f8a"},
 }
 
 var kind := "grunt"
@@ -17,8 +17,8 @@ var max_hp := 20.0
 var speed := 110.0
 var dps := 3.0
 var radius := 10.0
-var latched := false
-var latch_offset := Vector2.ZERO
+var blocked := false
+var press_offset := 0.0
 var _hop := 0.0
 var _fill: Color
 var _line: Color
@@ -34,6 +34,7 @@ func setup(type_name: String, hp_mult: float) -> void:
 	_fill = Color(cfg["fill"])
 	_line = Color(cfg["line"])
 	_hop = randf() * TAU
+	press_offset = randf_range(0.0, 26.0)
 
 func take_damage(amount: float) -> bool:
 	hp -= amount

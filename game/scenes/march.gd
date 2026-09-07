@@ -1,9 +1,10 @@
 extends Node2D
-## The march: golem auto-walks right, enemies swarm and latch, turrets fire,
+## The march: golem auto-walks right, enemies mob its front and slow it, turrets fire,
 ## reaching the wave's distance goal opens the draft, then the path choice.
 
 const GROUND_Y := 1000.0
 const GOLEM_X := 250.0
+const FRONT_OFFSET := 80.0
 const VIEW_W := 720.0
 
 var run: RefCounted
@@ -153,13 +154,13 @@ func _process(delta: float) -> void:
 		return
 	enemies = enemies.filter(func(e: Variant) -> bool: return is_instance_valid(e))
 	coins = coins.filter(func(c: Variant) -> bool: return is_instance_valid(c))
-	var latched_count := 0
+	var blocked_count := 0
 	for e: Enemy in enemies:
-		if e.latched:
-			latched_count += 1
-	var speed_px: float = run.march_speed_px(latched_count)
+		if e.blocked:
+			blocked_count += 1
+	var speed_px: float = run.march_speed_px(blocked_count)
 	var boss_blocking := is_instance_valid(boss)
-	if boss_blocking and boss.global_position.x - golem.position.x < 220.0:
+	if boss_blocking and boss.blocked:
 		speed_px = 0.0
 	golem.walk_speed_visual = clampf(speed_px / run.base_speed, 0.15, 2.0)
 	var goal := float(wave_cfg["goal_m"])
@@ -196,8 +197,7 @@ func _update_spawning(delta: float) -> void:
 	if spawn_timer <= 0.0:
 		spawn_timer = float(wave_cfg["spawn_interval"])
 		var kind := _pick_enemy_kind()
-		var from_behind := randf() < 0.2
-		_spawn_enemy(kind, -80.0 if from_behind else 800.0)
+		_spawn_enemy(kind, 800.0)
 
 func _pick_enemy_kind() -> String:
 	var weights: Dictionary = wave_cfg["types"]
@@ -221,20 +221,16 @@ func _spawn_enemy(kind: String, x: float) -> Enemy:
 	return e
 
 func _update_enemies(delta: float, scroll_px: float) -> void:
+	var front_x := golem.position.x + FRONT_OFFSET
 	for e: Enemy in enemies:
-		if e.latched:
-			e.global_position = golem.position + e.latch_offset
+		var min_x := front_x + e.radius + e.press_offset
+		e.position.x -= (scroll_px + e.speed) * delta
+		if e.position.x <= min_x:
+			e.position.x = min_x
+			e.blocked = true
 			run.hp -= e.dps * delta
-			continue
-		e.position.x -= scroll_px * delta
-		var dx := golem.position.x - e.position.x
-		e.position.x += signf(dx) * e.speed * delta
-		if absf(golem.position.x - e.position.x) < 70.0 + e.radius and e.kind != "boss":
-			e.latched = true
-			e.latch_offset = Vector2(randf_range(-60.0, 70.0), randf_range(-190.0, -20.0))
-		elif e.kind == "boss" and golem.position.x + 200.0 > e.position.x:
-			e.position.x = golem.position.x + 200.0
-			run.hp -= e.dps * delta
+		else:
+			e.blocked = false
 
 func _on_enemy_died(e: Enemy) -> void:
 	enemies.erase(e)
@@ -259,8 +255,6 @@ func nearest_enemy(from: Vector2, max_range: float) -> Enemy:
 		if not is_instance_valid(e_v):
 			continue
 		var e: Enemy = e_v
-		if e.latched:
-			continue
 		var d := from.distance_to(e.global_position)
 		if d < best_d:
 			best_d = d
@@ -291,8 +285,8 @@ func _on_slam() -> void:
 			continue
 		var e: Enemy = e_v
 		if golem.position.distance_to(e.global_position) <= run.slam_radius + e.radius:
-			e.latched = false
-			e.position = golem.position + (e.position - golem.position).normalized() * (run.slam_radius + 40.0)
+			e.blocked = false
+			e.position.x = golem.position.x + FRONT_OFFSET + run.slam_radius + randf_range(30.0, 90.0)
 			e.position.y = clampf(e.position.y, GROUND_Y - 10.0, GROUND_Y + 60.0)
 			e.take_damage(run.slam_damage * run.damage_mult)
 
