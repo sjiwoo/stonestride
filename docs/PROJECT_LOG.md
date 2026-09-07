@@ -50,6 +50,11 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   They collide with its front, stay there, and apply a slow that stacks per
   enemy; they can't pass through, get behind, or go under it. The golem
   shoots the closest enemy.
+- Weapon tree system (asked 2026-09-07): multiple weapon types the player
+  selects between, each with levels/upgrades that bring new visual effects.
+  Prototyped as three lines — cannon (single target), mortar (wave AoE),
+  javelin (pierce) — two levels each plus a pick-one exclusive branch at the
+  top; forging costs gold. Mockups reviewed in chat before implementation.
 - Card/path VFX (asked 2026-09-07): a subtle fiery effect around the upgrade
   cards and the map path choices, plus a better card design. Process: draft
   the design visually first, then implement in code. Upgraded the same day:
@@ -59,6 +64,10 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
+
+- 2026-09-08 · `docs` · Recorded the weapon tree design ask and prototype
+  direction (armory + per-level projectile VFX mockups drafted for owner
+  review; implementation pending approval).
 
 - 2026-09-07 · `docs` · Added this project log and CLAUDE.md agent
   instructions (owner ask: write and maintain a document of all changes,
