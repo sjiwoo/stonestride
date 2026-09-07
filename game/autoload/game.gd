@@ -14,6 +14,7 @@ var drafts: DraftSystem
 var armory: Armory
 var current_row := 0
 var current_index := 0
+var path_history: Array[int] = []
 var last_summary := {}
 
 func start_run(seed_value: int = -1) -> void:
@@ -31,6 +32,7 @@ func start_run(seed_value: int = -1) -> void:
 	armory.setup("res://game/data/weapons.json")
 	current_row = 0
 	current_index = 0
+	path_history = [0]
 
 func current_theme() -> String:
 	return map.node_at(current_row, current_index).theme
@@ -41,6 +43,7 @@ func choices_for_next_wave() -> Array:
 func advance_to(next_index: int) -> void:
 	current_row += 1
 	current_index = next_index
+	path_history.append(next_index)
 	run.wave += 1
 
 func end_run(victory: bool) -> void:

@@ -161,6 +161,12 @@ func _build_viewport(tint: Color) -> void:
 	_vp.add_child(_particles)
 	_apply_intensity(_intensity)
 
+func _ready() -> void:
+	# Containers resize us after tree entry, but manually laid-out frames
+	# (e.g. the map's boss ring) may have their size set before entering the
+	# tree, in which case resized never fires — lay out once on entry.
+	_layout()
+
 func set_flame(tint: Color, intensity: float) -> void:
 	_proc.color_ramp = _color_ramp(tint)
 	_apply_intensity(intensity)

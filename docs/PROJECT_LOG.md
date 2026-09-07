@@ -61,6 +61,10 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   the design visually first, then implement in code. Upgraded the same day:
   replace the 2D effect with **high-quality 3D flames**; adapting online
   implementations is explicitly allowed.
+- Visual path map (asked 2026-09-07): a beautiful map for the designed paths,
+  drafted visually first, still procedurally generated. Choosing the next
+  path must be **purely visual selection on the map with no text**, with good
+  visual effects and animation.
 
 ## Changelog
 
@@ -81,6 +85,20 @@ Newest first. Format: date · commit(s) · summary.
 - 2026-09-08 · `docs` · Recorded the weapon tree design ask and prototype
   direction (armory + per-level projectile VFX mockups drafted for owner
   review; implementation pending approval).
+- 2026-09-07 · `(this commit)` · Visual path map: `path_overlay.gd` rewritten
+  as a full-screen, text-free journey map (bottom-to-top). Procedural per run:
+  node jitter and trail bends seeded from the run seed. Terrain backdrop is a
+  new `game/fx/map_terrain.gdshader` (fbm ridge silhouettes, drifting haze,
+  vignette, parallax on scroll). Glyph-only waystones (flame/tree/droplet,
+  cairn start, skull boss with a FlameFrame 3D fire ring, spiked elites);
+  traveled path drawn gold from new `Game.path_history`; current choices pulse
+  with animated dashed trails; tap to pick (drag scrolls the taller-than-screen
+  map); selection triggers an expanding ring burst and the golem marker walks
+  the trail before `chosen` fires; ambient ember particles throughout.
+  `FlameFrame` gained a `_ready` layout pass so manually positioned frames
+  work. Public overlay API unchanged; `march.gd` untouched; `game.gd` only
+  gained `path_history`. Verified with offscreen renders (idle, mid-travel,
+  boss summit).
 
 - 2026-09-07 · `docs` · Added this project log and CLAUDE.md agent
   instructions (owner ask: write and maintain a document of all changes,
@@ -114,7 +132,7 @@ Newest first. Format: date · commit(s) · summary.
 
 ## Current state / open threads
 
-- Deployed web build: gh-pages `d277655` (3D flames included).
+- Deployed web build: gh-pages (3D flames + visual path map).
 - Flame tuning knobs live in `game/fx/card_fire.gd` (`FLAME_IDLE` /
   `FLAME_SELECTED` in `draft_overlay.gd`, intensities in `path_overlay.gd`);
   owner may request further tuning of intensity, size, or rise height.
