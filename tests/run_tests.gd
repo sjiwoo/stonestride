@@ -6,6 +6,7 @@ extends SceneTree
 const RunState := preload("res://game/sim/run_state.gd")
 const DraftSystem := preload("res://game/sim/draft_system.gd")
 const PathMap := preload("res://game/sim/path_map.gd")
+const Armory := preload("res://game/sim/armory.gd")
 
 var failures := 0
 var checks := 0
@@ -18,7 +19,11 @@ func _init() -> void:
 	test_path_map_connectivity()
 	test_run_state_effects()
 	test_march_speed_bounds()
+	test_armory_gating()
+	test_armory_branch_exclusivity()
+	test_armory_stats()
 	test_data_integrity()
+	test_weapons_data()
 	print("---")
 	print("%d checks, %d failures" % [checks, failures])
 	quit(1 if failures > 0 else 0)
@@ -114,8 +119,6 @@ func test_run_state_effects() -> void:
 	check(absf(run.damage_mult - 1.5) < 0.0001, "mul effect wrong")
 	run.apply_effect({"stat": "gold_per_meter", "op": "add", "value": 2})
 	check(absf(run.gold_per_meter - 3.0) < 0.0001, "add effect wrong")
-	run.apply_effect({"op": "mount", "value": "mortar"})
-	check(run.turrets.size() == 2 and run.turrets[1] == "mortar", "mount effect wrong")
 	run.apply_effect({"stat": "coin_magnet", "op": "flag", "value": true})
 	check(run.coin_magnet, "flag effect wrong")
 	run.apply_effect({"stat": "max_hp", "op": "add", "value": 25})
@@ -144,7 +147,7 @@ func test_data_integrity() -> void:
 		check(card["rarity"] in ["common", "rare", "epic"], "%s: bad rarity" % card["id"])
 		for e: Dictionary in card["effects"]:
 			var op := String(e.get("op", "add"))
-			check(op in ["add", "mul", "mount", "flag"], "%s: bad op" % card["id"])
+			check(op in ["add", "mul", "flag"], "%s: bad op" % card["id"])
 			if op in ["add", "mul"]:
 				check(String(e["stat"]) in RunState.STAT_KEYS, "%s: unknown stat %s" % [card["id"], e["stat"]])
 		probe.apply_card(card)
@@ -165,3 +168,77 @@ func test_data_integrity() -> void:
 		check(float(waves[i]["goal_m"]) > prev_goal, "wave goals must increase")
 		prev_goal = float(waves[i]["goal_m"])
 	check(bool(waves[waves.size() - 1].get("boss", false)), "final wave must be a boss")
+
+func _make_armory() -> Armory:
+	var a := Armory.new()
+	a.setup("res://game/data/weapons.json")
+	return a
+
+func test_armory_gating() -> void:
+	var a := _make_armory()
+	var run := RunState.new()
+	run.gold = 10000
+	check(a.level_of(run, "cannon") == 1, "cannon should start at level 1")
+	check(a.level_of(run, "javelin") == 0, "javelin should start unowned")
+	check(not a.can_forge(run, "javelin", "storm")["ok"], "branch must not be forgeable before level 2")
+	check(a.forge(run, "javelin"), "forge javelin L1")
+	check(a.level_of(run, "javelin") == 1, "javelin level 1 after forge")
+	check(a.forge(run, "javelin"), "forge javelin L2")
+	check(a.forge(run, "javelin", "storm"), "forge javelin branch")
+	check(a.level_of(run, "javelin") == 3 and a.branch_of(run, "javelin") == "storm", "branch recorded")
+	check(not a.forge(run, "javelin", "impaler"), "maxed weapon rejects further forging")
+	var poor := RunState.new()
+	poor.gold = 5
+	check(not a.forge(poor, "mortar"), "insufficient gold must fail")
+	check(poor.gold == 5, "failed forge must not spend gold")
+
+func test_armory_branch_exclusivity() -> void:
+	var a := _make_armory()
+	for id: String in ["cannon", "mortar", "javelin"]:
+		var run := RunState.new()
+		run.gold = 10000
+		var before: int = run.gold
+		while a.level_of(run, id) < 2:
+			check(a.forge(run, id), "level up %s" % id)
+		check(a.forge(run, id, "nonsense") == false, "%s: unknown branch rejected" % id)
+		var branches: Array = a.weapon_def(id)["branches"]
+		check(a.forge(run, id, String(branches[0]["id"])), "%s: first branch forges" % id)
+		check(not a.can_forge(run, id, String(branches[1]["id"]))["ok"], "%s: second branch sealed" % id)
+		check(run.gold < before, "%s: forging spends gold" % id)
+
+func test_armory_stats() -> void:
+	var a := _make_armory()
+	var run := RunState.new()
+	run.gold = 10000
+	var s1: Dictionary = a.turret_stats(run, "cannon")
+	check(String(s1["mode"]) == "shell" and int(s1["level"]) == 1, "cannon L1 stats")
+	a.forge(run, "cannon")
+	var s2: Dictionary = a.turret_stats(run, "cannon")
+	check(float(s2["damage"]) > float(s1["damage"]), "L2 must hit harder than L1")
+	a.forge(run, "cannon", "magma")
+	var s3: Dictionary = a.turret_stats(run, "cannon")
+	check(s3.has("burn_dps") and String(s3["branch"]) == "magma", "magma branch stats carry burn")
+
+func test_weapons_data() -> void:
+	var a := _make_armory()
+	check(a.WEAPON_ORDER.size() == 3, "three weapon lines")
+	for id: String in a.WEAPON_ORDER:
+		var d: Dictionary = a.weapon_def(id)
+		check(d["levels"].size() == 2, "%s: two levels" % id)
+		check(d["branches"].size() == 2, "%s: two branches" % id)
+		var prev_cost := -1
+		for node: Dictionary in d["levels"]:
+			check(int(node["cost"]) > prev_cost, "%s: level costs must increase" % id)
+			prev_cost = int(node["cost"])
+			for key in ["name", "desc", "mode", "damage", "cooldown", "range"]:
+				check(node.has(key), "%s: level missing %s" % [id, key])
+		for b: Dictionary in d["branches"]:
+			check(int(b["cost"]) > prev_cost, "%s: branch cost above levels" % id)
+			check(b.has("id") and b.has("name") and b.has("desc"), "%s: branch fields" % id)
+		var probe := RunState.new()
+		probe.gold = 100000
+		while a.level_of(probe, id) < 2:
+			check(a.forge(probe, id), "%s: probe level" % id)
+		check(a.forge(probe, id, String(d["branches"][1]["id"])), "%s: probe branch" % id)
+		var st: Dictionary = a.turret_stats(probe, id)
+		check(String(st["mode"]) in ["shell", "splash", "bolt"], "%s: valid mode" % id)

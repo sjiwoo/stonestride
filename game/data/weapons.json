@@ -1,0 +1,37 @@
+{
+  "weapons": [
+    {
+      "id": "cannon", "name": "Cannon", "role": "Single target", "color": "e05a4e",
+      "levels": [
+        {"name": "Cannon", "cost": 0, "desc": "Quick single shots", "mode": "shell", "damage": 9, "cooldown": 0.8, "range": 460},
+        {"name": "Rifled bore", "cost": 110, "desc": "Harder, faster tracer shells", "mode": "shell", "damage": 13, "cooldown": 0.66, "range": 500, "tracer": true}
+      ],
+      "branches": [
+        {"id": "magma", "name": "Magma bore", "cost": 190, "desc": "Shots ignite enemies, ember trail", "mode": "shell", "damage": 15, "cooldown": 0.66, "range": 500, "tracer": true, "magma": true, "burn_dps": 3.5, "burn_time": 2.5},
+        {"id": "twin", "name": "Twin cannons", "cost": 190, "desc": "Second barrel, alternating fire", "mode": "shell", "damage": 13, "cooldown": 0.34, "range": 500, "tracer": true, "twin": true}
+      ]
+    },
+    {
+      "id": "mortar", "name": "Mortar", "role": "Wave AoE", "color": "9ad17a",
+      "levels": [
+        {"name": "Spore mortar", "cost": 100, "desc": "Lobbed splash shells", "mode": "splash", "damage": 14, "cooldown": 1.9, "range": 430, "splash": 70},
+        {"name": "Bloom shells", "cost": 140, "desc": "Much wider spore burst", "mode": "splash", "damage": 18, "cooldown": 1.8, "range": 450, "splash": 102}
+      ],
+      "branches": [
+        {"id": "ash", "name": "Ash field", "cost": 200, "desc": "Blasts leave a burning patch", "mode": "splash", "damage": 18, "cooldown": 1.8, "range": 450, "splash": 102, "field_dps": 7.0, "field_time": 3.0, "field_radius": 84},
+        {"id": "cluster", "name": "Cluster bloom", "cost": 200, "desc": "Shell splits into three bomblets", "mode": "splash", "damage": 12, "cooldown": 1.8, "range": 450, "splash": 62, "cluster": 3}
+      ]
+    },
+    {
+      "id": "javelin", "name": "Javelin", "role": "Pierce", "color": "5b9bd5",
+      "levels": [
+        {"name": "Javelin rig", "cost": 90, "desc": "Bolts pierce 2 enemies", "mode": "bolt", "damage": 11, "cooldown": 1.1, "range": 540, "pierce": 2},
+        {"name": "Skewer", "cost": 150, "desc": "Pierce 4, heavier bolts", "mode": "bolt", "damage": 18, "cooldown": 1.05, "range": 560, "pierce": 4}
+      ],
+      "branches": [
+        {"id": "storm", "name": "Stormspike", "cost": 210, "desc": "Hits chain lightning to nearby enemies", "mode": "bolt", "damage": 18, "cooldown": 1.05, "range": 560, "pierce": 4, "chain": 2, "chain_damage": 9.0},
+        {"id": "impaler", "name": "Impaler", "cost": 210, "desc": "Bonus damage to enemies mobbing the golem", "mode": "bolt", "damage": 20, "cooldown": 1.0, "range": 560, "pierce": 5, "blocked_bonus": 8.0}
+      ]
+    }
+  ]
+}

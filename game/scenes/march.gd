@@ -16,6 +16,7 @@ var boss: Enemy = null
 var spawn_timer := 0.0
 var enemies: Array = []
 var coins: Array = []
+var fields: Array = []
 var _shake := 0.0
 var _paused_for_overlay := false
 
@@ -197,15 +198,21 @@ func _mount_turrets() -> void:
 	for m in golem.mount_points:
 		for child in m.get_children():
 			child.queue_free()
-	for i in range(run.turrets.size()):
-		if i >= golem.mount_points.size():
-			break
+	var slot := 0
+	for id: String in Game.armory.WEAPON_ORDER:
+		if Game.armory.level_of(run, id) <= 0 or slot >= golem.mount_points.size():
+			continue
 		var t := Turret.new()
-		golem.mount_points[i].add_child(t)
-		t.setup(run.turrets[i], self)
+		golem.mount_points[slot].add_child(t)
+		t.setup(Game.armory.turret_stats(run, id), self)
+		slot += 1
 
 func _start_wave() -> void:
 	_wave_ending = false
+	for f_v in fields:
+		if is_instance_valid(f_v):
+			f_v.queue_free()
+	fields.clear()
 	wave_cfg = wave_cfgs[run.wave - 1]
 	wave_distance = 0.0
 	spawn_timer = 0.6
@@ -347,10 +354,38 @@ func nearest_enemy(from: Vector2, max_range: float) -> Enemy:
 			best = e
 	return best
 
-func spawn_projectile(from: Vector2, target: Enemy, dmg: float, splash: float, kind: String) -> void:
+func spawn_projectile(from: Vector2, target: Enemy, cfg: Dictionary) -> void:
 	var p := Projectile.new()
 	add_child(p)
-	p.setup(from, target, dmg, splash, kind, self)
+	p.setup(from, target, cfg, self)
+
+func spawn_bomblets(at: Vector2, cfg: Dictionary) -> void:
+	for i in range(int(cfg["cluster"])):
+		var sub := cfg.duplicate()
+		sub["mode"] = "bomblet"
+		sub.erase("cluster")
+		sub["damage"] = float(cfg["damage"]) * 0.7
+		var p := Projectile.new()
+		add_child(p)
+		var tgt := nearest_enemy(at + Vector2(randf_range(-90, 90), 0), 260.0)
+		p.setup(at + Vector2(randf_range(-14, 14), -10), tgt, sub, self)
+		if tgt == null:
+			p._dir = Vector2(randf_range(-0.4, 0.4), 1.0).normalized()
+
+func spawn_ash_field(at: Vector2, cfg: Dictionary) -> void:
+	var f := AshField.new()
+	f.position = Vector2(at.x, GROUND_Y + 6.0)
+	f.setup(cfg, self)
+	f.z_index = -1
+	add_child(f)
+	fields.append(f)
+
+func spawn_zap(origin: Vector2, links: Array) -> void:
+	var z := ZapFx.new()
+	z.position = origin
+	for l: Vector2 in links:
+		z.links.append(l)
+	add_child(z)
 
 func damage_area(center: Vector2, radius: float, dmg: float) -> void:
 	for e_v in enemies.duplicate():
@@ -468,6 +503,14 @@ func _on_card_chosen(card: Dictionary) -> void:
 
 func _on_path_chosen(index: int) -> void:
 	Game.advance_to(index)
+	var overlay := ArmoryOverlay.new()
+	overlay.run = run
+	overlay.armory = Game.armory
+	overlay.closed.connect(_on_armory_closed)
+	add_child(overlay)
+
+func _on_armory_closed() -> void:
+	_mount_turrets()
 	get_tree().paused = false
 	_paused_for_overlay = false
 	_start_wave()

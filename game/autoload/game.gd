@@ -4,12 +4,14 @@ extends Node
 const RunState := preload("res://game/sim/run_state.gd")
 const PathMap := preload("res://game/sim/path_map.gd")
 const DraftSystem := preload("res://game/sim/draft_system.gd")
+const Armory := preload("res://game/sim/armory.gd")
 
 const TOTAL_WAVES := 10
 
 var run: RunState
 var map: PathMap
 var drafts: DraftSystem
+var armory: Armory
 var current_row := 0
 var current_index := 0
 var last_summary := {}
@@ -25,6 +27,8 @@ func start_run(seed_value: int = -1) -> void:
 	map.generate(rng, TOTAL_WAVES)
 	drafts = DraftSystem.new()
 	drafts.setup(rng, "res://game/data/cards.json", "res://game/data/themes.json")
+	armory = Armory.new()
+	armory.setup("res://game/data/weapons.json")
 	current_row = 0
 	current_index = 0
 

@@ -38,6 +38,35 @@ func _run() -> void:
 		overlay._on_confirm()
 	await _settle(0.5)
 	await _capture("06_path.png")
+	var path_overlay: Node = null
+	for child in get_tree().current_scene.get_children():
+		if child is PathOverlay:
+			path_overlay = child
+	if path_overlay != null:
+		path_overlay.chosen.emit(path_overlay.choices[0]["index"])
+		path_overlay.queue_free()
+	await _settle(0.5)
+	await _capture("07_armory.png")
+	var run: RefCounted = Game.run
+	run.gold = 5000
+	Game.armory.forge(run, "cannon")
+	Game.armory.forge(run, "cannon", "magma")
+	Game.armory.forge(run, "mortar")
+	Game.armory.forge(run, "mortar")
+	Game.armory.forge(run, "mortar", "ash")
+	Game.armory.forge(run, "javelin")
+	Game.armory.forge(run, "javelin")
+	Game.armory.forge(run, "javelin", "storm")
+	var armory_overlay: Node = null
+	for child in get_tree().current_scene.get_children():
+		if child is ArmoryOverlay:
+			armory_overlay = child
+	if armory_overlay != null:
+		armory_overlay.closed.emit()
+		armory_overlay.queue_free()
+	march.wave_cfg["goal_m"] = 100000.0
+	await _settle(5.0)
+	await _capture("08_maxed_build.png")
 	print("SCREENSHOTS_DONE")
 	get_tree().quit()
 

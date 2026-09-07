@@ -20,6 +20,8 @@ var radius := 10.0
 var blocked := false
 var fleeing := false
 var press_offset := 0.0
+var burn_dps := 0.0
+var burn_left := 0.0
 var _hop := 0.0
 var _fill: Color
 var _line: Color
@@ -46,14 +48,25 @@ func take_damage(amount: float) -> bool:
 		return true
 	return false
 
+func apply_burn(dps: float, duration: float) -> void:
+	burn_dps = maxf(burn_dps, dps)
+	burn_left = maxf(burn_left, duration)
+
 func _process(delta: float) -> void:
 	_hop += delta * (10.0 if kind == "runner" else 7.0)
+	if burn_left > 0.0:
+		burn_left -= delta
+		take_damage(burn_dps * delta)
+		if burn_left <= 0.0:
+			burn_dps = 0.0
 	queue_redraw()
 
 func _draw() -> void:
 	var bounce := -absf(sin(_hop)) * radius * 0.55
 	var c := Vector2(0, bounce - radius)
 	draw_ellipse_shadow()
+	if burn_left > 0.0:
+		draw_circle(c + Vector2(0, -radius * 0.9), radius * 0.5, Color("ffb347", 0.55))
 	draw_circle(c, radius, _fill)
 	draw_arc(c, radius, 0, TAU, 20, _line, 2.0)
 	draw_circle(c + Vector2(radius * 0.3, -radius * 0.2), radius * 0.22, Color("ffffff", 0.85))

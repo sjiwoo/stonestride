@@ -24,7 +24,7 @@ var slam_damage := 60.0
 var latch_resist := 0.0
 var coin_magnet := false
 var tap_damage := 15.0
-var turrets: Array[String] = ["cannon"]
+var weapons := {"cannon": {"level": 1, "branch": ""}}
 
 const STAT_KEYS := [
 	"max_hp", "base_speed", "speed_mult", "damage_mult", "fire_rate_mult",
@@ -35,8 +35,6 @@ const STAT_KEYS := [
 func apply_effect(effect: Dictionary) -> void:
 	var op: String = effect.get("op", "add")
 	match op:
-		"mount":
-			turrets.append(String(effect["value"]))
 		"flag":
 			set(String(effect["stat"]), bool(effect["value"]))
 		"add":

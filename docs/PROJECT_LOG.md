@@ -54,7 +54,8 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   selects between, each with levels/upgrades that bring new visual effects.
   Prototyped as three lines — cannon (single target), mortar (wave AoE),
   javelin (pierce) — two levels each plus a pick-one exclusive branch at the
-  top; forging costs gold. Mockups reviewed in chat before implementation.
+  top; forging costs gold. Mockups reviewed in chat; owner approved ("Go"),
+  including the between-waves armory screen (opens after the path choice).
 - Card/path VFX (asked 2026-09-07): a subtle fiery effect around the upgrade
   cards and the map path choices, plus a better card design. Process: draft
   the design visually first, then implement in code. Upgraded the same day:
@@ -65,6 +66,18 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 
 Newest first. Format: date · commit(s) · summary.
 
+- 2026-09-08 · (this commit) · Weapon tree system implemented. New
+  `game/data/weapons.json` + `game/sim/armory.gd` (level gating, branch
+  exclusivity, gold costs; fully unit-tested). `ArmoryOverlay` opens between
+  waves after the path choice. Turrets/projectiles rewritten mode-driven:
+  cannon shell/tracer/magma-burn or twin barrels; mortar splash/bloom with
+  ash-field (`ash_field.gd`) or cluster bomblets; javelin pierce bolts with
+  storm chain lightning (`zap_fx.gd`) or impaler blocked-bonus. Enemies
+  support burn DoT. Mount cards removed from the draft pool (replaced by
+  overclocked_loaders / war_core); RunState.turrets -> weapons dict, mount
+  op removed. Tests 4,992 -> 5,098 checks. Shot suite now captures the
+  armory (07) and a maxed triple-branch build in combat (08). Web build
+  deployed to gh-pages.
 - 2026-09-08 · `docs` · Recorded the weapon tree design ask and prototype
   direction (armory + per-level projectile VFX mockups drafted for owner
   review; implementation pending approval).
