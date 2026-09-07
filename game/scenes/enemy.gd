@@ -18,6 +18,7 @@ var speed := 110.0
 var dps := 3.0
 var radius := 10.0
 var blocked := false
+var fleeing := false
 var press_offset := 0.0
 var _hop := 0.0
 var _fill: Color

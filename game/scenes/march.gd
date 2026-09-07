@@ -21,9 +21,15 @@ var _paused_for_overlay := false
 
 var golem: Golem
 var bg: Node2D
+var fg: Node2D
+var goal_marker: Node2D
 var rocks: Array = []
 var clouds: Array = []
+var far_hills: Array = []
+var mid_spires: Array = []
+var fg_rocks: Array = []
 var theme_colors := {}
+var _wave_ending := false
 
 var hud: CanvasLayer
 var dist_fill: ColorRect
@@ -31,6 +37,7 @@ var dist_track: ColorRect
 var hp_fill: ColorRect
 var wave_label: Label
 var gold_label: Label
+var dist_label: Label
 var slam_btn: Button
 
 func _ready() -> void:
@@ -56,10 +63,25 @@ func _build_world() -> void:
 		rocks.append({"x": randf() * 900.0 - 60.0, "y": GROUND_Y + 20 + randf() * 200.0, "r": 8.0 + randf() * 16.0})
 	for i in range(4):
 		clouds.append({"x": randf() * 800.0, "y": 90.0 + randf() * 160.0, "r": 30.0 + randf() * 30.0})
+	for i in range(6):
+		far_hills.append({"x": i * 300.0 + randf() * 120.0, "w": 180.0 + randf() * 160.0, "h": 120.0 + randf() * 150.0})
+	for i in range(9):
+		mid_spires.append({"x": i * 200.0 + randf() * 100.0, "w": 40.0 + randf() * 55.0, "h": 90.0 + randf() * 170.0})
+	for i in range(8):
+		fg_rocks.append({"x": i * 220.0 + randf() * 130.0, "r": 26.0 + randf() * 40.0})
+	goal_marker = Node2D.new()
+	goal_marker.z_index = -1
+	goal_marker.position = Vector2(2000, GROUND_Y)
+	goal_marker.draw.connect(_draw_goal_marker.bind(goal_marker))
+	add_child(goal_marker)
 	golem = Golem.new()
 	golem.position = Vector2(GOLEM_X, GROUND_Y)
 	golem.scale = Vector2(1.35, 1.35)
 	add_child(golem)
+	fg = Node2D.new()
+	fg.z_index = 5
+	fg.draw.connect(_draw_fg.bind(fg))
+	add_child(fg)
 
 func _draw_bg(canvas: Node2D) -> void:
 	var top := Color(String(theme_colors.get("sky_top", "1b2440")))
@@ -72,12 +94,53 @@ func _draw_bg(canvas: Node2D) -> void:
 		canvas.draw_set_transform(Vector2(c["x"], c["y"]), 0.0, Vector2(1.0, 0.28))
 		canvas.draw_circle(Vector2.ZERO, c["r"], top.lightened(0.14))
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var c_far := bottom.darkened(0.3)
+	for h: Dictionary in far_hills:
+		canvas.draw_set_transform(Vector2(h["x"], GROUND_Y + 30.0), 0.0, Vector2(h["w"] / 100.0, h["h"] / 100.0))
+		canvas.draw_circle(Vector2.ZERO, 100.0, c_far)
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var c_mid := bottom.darkened(0.52)
+	for s: Dictionary in mid_spires:
+		canvas.draw_colored_polygon(PackedVector2Array([
+			Vector2(s["x"] - s["w"], GROUND_Y + 4.0),
+			Vector2(s["x"] - s["w"] * 0.15, GROUND_Y - s["h"]),
+			Vector2(s["x"] + s["w"] * 0.25, GROUND_Y - s["h"] * 0.55),
+			Vector2(s["x"] + s["w"] * 0.7, GROUND_Y + 4.0)]), c_mid)
 	canvas.draw_rect(Rect2(0, GROUND_Y, VIEW_W, 1280 - GROUND_Y), ground)
 	canvas.draw_rect(Rect2(0, GROUND_Y, VIEW_W, 8), ground.lightened(0.25))
 	for r: Dictionary in rocks:
 		canvas.draw_set_transform(Vector2(r["x"], r["y"]), 0.0, Vector2(1.0, 0.3))
 		canvas.draw_circle(Vector2.ZERO, r["r"], ground.darkened(0.35))
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_fg(canvas: Node2D) -> void:
+	var ground := Color(String(theme_colors.get("ground", "2e2a3d")))
+	var c_fg := ground.darkened(0.5)
+	canvas.draw_rect(Rect2(0, 1178, VIEW_W, 1280 - 1178), c_fg)
+	canvas.draw_rect(Rect2(0, 1178, VIEW_W, 6), c_fg.lightened(0.18))
+	for r: Dictionary in fg_rocks:
+		canvas.draw_set_transform(Vector2(r["x"], 1196.0), 0.0, Vector2(1.0, 0.62))
+		canvas.draw_circle(Vector2.ZERO, r["r"], c_fg.darkened(0.25))
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_goal_marker(canvas: Node2D) -> void:
+	var accent := Color(String(theme_colors.get("color", "ffb347")))
+	var stone := Color("6e6a80")
+	var line := Color("454157")
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.3))
+	canvas.draw_circle(Vector2.ZERO, 46.0, Color("191624", 0.5))
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var pillar := PackedVector2Array([
+		Vector2(-17, 0), Vector2(17, 0), Vector2(12, -192), Vector2(-12, -192)])
+	canvas.draw_colored_polygon(pillar, stone)
+	canvas.draw_polyline(PackedVector2Array([
+		Vector2(-17, 0), Vector2(17, 0), Vector2(12, -192), Vector2(-12, -192), Vector2(-17, 0)]), line, 3.0)
+	canvas.draw_colored_polygon(PackedVector2Array([
+		Vector2(-19, -192), Vector2(19, -192), Vector2(0, -226)]), stone.lightened(0.12))
+	canvas.draw_colored_polygon(PackedVector2Array([
+		Vector2(0, -224), Vector2(52, -204), Vector2(0, -190)]), accent)
+	canvas.draw_circle(Vector2(0, -118), 15.0, Color(UiKit.GOLD, 0.35))
+	canvas.draw_circle(Vector2(0, -118), 9.0, UiKit.GOLD)
 
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
@@ -110,6 +173,8 @@ func _build_hud() -> void:
 	dist_fill.color = UiKit.GOLD
 	dist_fill.size = Vector2(0, 14)
 	dist_track.add_child(dist_fill)
+	dist_label = UiKit.label("0m / 60m", 19, UiKit.TEXT_FAINT)
+	v.add_child(dist_label)
 	var hp_track := ColorRect.new()
 	hp_track.color = Color("2a2540")
 	hp_track.custom_minimum_size = Vector2(0, 10)
@@ -140,11 +205,14 @@ func _mount_turrets() -> void:
 		t.setup(run.turrets[i], self)
 
 func _start_wave() -> void:
+	_wave_ending = false
 	wave_cfg = wave_cfgs[run.wave - 1]
 	wave_distance = 0.0
 	spawn_timer = 0.6
 	theme_colors = themes[Game.current_theme()]
 	bg.queue_redraw()
+	fg.queue_redraw()
+	goal_marker.queue_redraw()
 	wave_label.text = "Wave %d · %s" % [run.wave, String(theme_colors["name"])]
 	if wave_cfg.get("boss", false):
 		boss = _spawn_enemy("boss", 820.0)
@@ -154,6 +222,9 @@ func _process(delta: float) -> void:
 		return
 	enemies = enemies.filter(func(e: Variant) -> bool: return is_instance_valid(e))
 	coins = coins.filter(func(c: Variant) -> bool: return is_instance_valid(c))
+	if _wave_ending:
+		_update_fleeing(delta)
+		return
 	var blocked_count := 0
 	for e: Enemy in enemies:
 		if e.blocked:
@@ -162,12 +233,14 @@ func _process(delta: float) -> void:
 	var boss_blocking := is_instance_valid(boss)
 	if boss_blocking and boss.blocked:
 		speed_px = 0.0
-	golem.walk_speed_visual = clampf(speed_px / run.base_speed, 0.15, 2.0)
+	golem.walk_speed_visual = clampf(speed_px / run.base_speed, 0.0, 2.2)
 	var goal := float(wave_cfg["goal_m"])
 	var meters: float = run.travel(speed_px * delta)
 	wave_distance += meters
 	if boss_blocking:
 		wave_distance = minf(wave_distance, goal * 0.97)
+	goal_marker.position.x = GOLEM_X + FRONT_OFFSET + (goal - wave_distance) * run.PX_PER_M
+	goal_marker.visible = goal_marker.position.x < 860.0
 	_scroll_world(speed_px * delta)
 	_update_spawning(delta)
 	_update_enemies(delta, speed_px)
@@ -190,7 +263,20 @@ func _scroll_world(px: float) -> void:
 		c["x"] -= px * 0.15
 		if c["x"] < -80.0:
 			c["x"] += 880.0
+	for h: Dictionary in far_hills:
+		h["x"] -= px * 0.06
+		if h["x"] < -400.0:
+			h["x"] += 2200.0
+	for s: Dictionary in mid_spires:
+		s["x"] -= px * 0.22
+		if s["x"] < -160.0:
+			s["x"] += 1960.0
+	for r: Dictionary in fg_rocks:
+		r["x"] -= px * 1.4
+		if r["x"] < -80.0:
+			r["x"] += 1840.0
 	bg.queue_redraw()
+	fg.queue_redraw()
 
 func _update_spawning(delta: float) -> void:
 	spawn_timer -= delta
@@ -321,6 +407,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _update_hud(goal: float) -> void:
 	dist_fill.size.x = dist_track.size.x * clampf(wave_distance / goal, 0.0, 1.0)
+	dist_label.text = "%dm / %dm" % [int(wave_distance), int(goal)]
 	hp_fill.size.x = hp_fill.get_parent().size.x * clampf(run.hp / run.max_hp, 0.0, 1.0)
 	hp_fill.color = UiKit.GOOD if run.hp > run.max_hp * 0.35 else UiKit.BAD
 	gold_label.text = "%d g" % run.gold
@@ -335,9 +422,33 @@ func _complete_wave() -> void:
 	if Game.current_row >= Game.map.rows.size() - 1:
 		_finish_run(true)
 		return
+	_wave_ending = true
+	golem.walk_speed_visual = 0.0
+	for e_v in enemies:
+		if is_instance_valid(e_v):
+			var e: Enemy = e_v
+			e.fleeing = true
+			e.blocked = false
+	for c_v in coins:
+		if is_instance_valid(c_v):
+			(c_v as Coin).magnet_target = golem
+	_show_draft_after_rout()
+
+func _update_fleeing(delta: float) -> void:
+	for e_v in enemies.duplicate():
+		if not is_instance_valid(e_v):
+			continue
+		var e: Enemy = e_v
+		e.position.x += e.speed * 2.4 * delta
+		e.modulate.a = maxf(0.0, e.modulate.a - delta * 1.1)
+		if e.modulate.a <= 0.0 or e.position.x > 880.0:
+			enemies.erase(e)
+			e.queue_free()
+
+func _show_draft_after_rout() -> void:
+	await get_tree().create_timer(1.25).timeout
 	_paused_for_overlay = true
 	get_tree().paused = true
-	_clear_field()
 	var overlay := DraftOverlay.new()
 	overlay.theme_name = Game.current_theme()
 	overlay.wave = run.wave
@@ -345,16 +456,6 @@ func _complete_wave() -> void:
 	overlay.run = run
 	overlay.finished.connect(_on_card_chosen)
 	add_child(overlay)
-
-func _clear_field() -> void:
-	for e_v in enemies.duplicate():
-		if is_instance_valid(e_v):
-			(e_v as Enemy).queue_free()
-	enemies.clear()
-	for c_v in coins.duplicate():
-		if is_instance_valid(c_v):
-			(c_v as Coin).collect()
-	coins.clear()
 
 func _on_card_chosen(card: Dictionary) -> void:
 	run.apply_card(card)
