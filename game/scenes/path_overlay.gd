@@ -44,12 +44,27 @@ func _ready() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.clip_contents = true
 	add_child(_root)
+	var art_path := "res://game/art/map_backdrop.jpg"
+	var has_art := ResourceLoader.exists(art_path)
+	if has_art:
+		var art := TextureRect.new()
+		art.texture = load(art_path)
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.set_anchors_preset(Control.PRESET_FULL_RECT)
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art.modulate = Color(1.3, 1.3, 1.3)
+		_root.add_child(art)
 	_terrain_mat = ShaderMaterial.new()
 	_terrain_mat.shader = preload("res://game/fx/map_terrain.gdshader")
 	var terrain := ColorRect.new()
 	terrain.material = _terrain_mat
 	terrain.set_anchors_preset(Control.PRESET_FULL_RECT)
 	terrain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if has_art:
+		# Painted backdrop underneath; the shader becomes a translucent
+		# haze/vignette pass over it instead of the whole terrain.
+		terrain.modulate = Color(1, 1, 1, 0.25)
 	_root.add_child(terrain)
 	_view = MapView.new()
 	_view.setup(self)

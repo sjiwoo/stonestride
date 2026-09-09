@@ -10,7 +10,10 @@ Non-negotiables for every agent session (Claude or otherwise):
    new owner ask or design direction must be recorded in its sections.
 2. **Hands-free only.** The owner never opens the Godot editor. Ship complete
    files and validate headless (parse checks, scripted smoke tests, xvfb
-   offscreen renders for visuals).
+   offscreen renders for visuals). When a windowed run is unavoidable (e.g.
+   the screenshot suite), ALWAYS launch with `--position 10000,80 -- --background`
+   — the Settings autoload then parks the window off-screen with NO_FOCUS so
+   the owner's active window is never disturbed. Never minimize instead.
 3. **Keep the web preview current.** After visual or gameplay changes, export
    the Web preset headless and push the build to `gh-pages` (manual deploy,
    no CI).

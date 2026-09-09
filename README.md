@@ -11,9 +11,10 @@ converge on the wave-10 boss.
     godot --headless --path . --import  # first run only: builds class cache
     godot --headless --path . --script tests/run_tests.gd   # property tests
 
-Visual verification without opening the engine:
+Visual verification without opening the engine (always pass the background
+flags so the game window never appears on screen or steals focus):
 
-    STONESTRIDE_SHOTS=/tmp/shots godot --path .   # captures menu/march/draft/path PNGs
+    STONESTRIDE_SHOTS=/tmp/shots godot --path . --position 10000,80 -- --background
 
 ## Layout
 

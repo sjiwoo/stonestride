@@ -6,7 +6,7 @@ config_version=5
 config/name="Stonestride"
 run/main_scene="res://game/scenes/boot.tscn"
 config/features=PackedStringArray("4.4", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://game/art/icon_512.png"
 
 [autoload]
 

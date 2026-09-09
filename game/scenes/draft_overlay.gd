@@ -92,8 +92,14 @@ func _make_card(i: int) -> FlameFrame:
 	content.add_theme_constant_override("margin_top", 12)
 	content.add_theme_constant_override("margin_bottom", 10)
 	body.add_child(content)
+	var h: HBoxContainer = UiKit.hbox(14)
+	content.add_child(h)
+	var emblem := _category_emblem(card["category"])
+	if emblem != null:
+		h.add_child(emblem)
 	var v: VBoxContainer = UiKit.vbox(4)
-	content.add_child(v)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(v)
 	var top: HBoxContainer = UiKit.hbox()
 	top.add_child(_category_pill(card["category"], cat_color))
 	var fill := Control.new()
@@ -118,6 +124,24 @@ func _make_card(i: int) -> FlameFrame:
 	var frame := FlameFrame.wrap(p, _flame_tint(cat_color), FLAME_IDLE, AURA_PAD, float(CARD_CORNER))
 	_card_frames.append(frame)
 	return frame
+
+func _category_emblem(category: String) -> Control:
+	var path := "res://game/art/emblem_%s.png" % category
+	if not ResourceLoader.exists(path):
+		return null
+	var plaque := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("12101c")
+	sb.set_corner_radius_all(14)
+	plaque.add_theme_stylebox_override("panel", sb)
+	plaque.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var tex := TextureRect.new()
+	tex.texture = load(path)
+	tex.custom_minimum_size = Vector2(92, 92)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	plaque.add_child(tex)
+	return plaque
 
 func _category_pill(category: String, cat_color: Color) -> PanelContainer:
 	var pill := PanelContainer.new()

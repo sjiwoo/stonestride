@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcx64t3hwm1w1"
-path="res://.godot/imported/02_march.png-2315147409cdcfd6b6ddaa13b19ae220.ctex"
+uid="uid://cgtkgx4timdax"
+path="res://.godot/imported/march_boss.jpg-6812a2c3a9105d4446467564e1a3996f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://screenshots/02_march.png"
-dest_files=["res://.godot/imported/02_march.png-2315147409cdcfd6b6ddaa13b19ae220.ctex"]
+source_file="res://game/art/march_boss.jpg"
+dest_files=["res://.godot/imported/march_boss.jpg-6812a2c3a9105d4446467564e1a3996f.ctex"]
 
 [params]
 

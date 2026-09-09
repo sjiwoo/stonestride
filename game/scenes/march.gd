@@ -30,6 +30,16 @@ var far_hills: Array = []
 var mid_spires: Array = []
 var fg_rocks: Array = []
 var theme_colors := {}
+var bg_tex: Texture2D = null
+var bg_scroll := 0.0
+
+const BG_ART := {
+	"neutral": "res://game/art/march_wastes.jpg",
+	"fire": "res://game/art/march_fire.jpg",
+	"forest": "res://game/art/march_forest.jpg",
+	"water": "res://game/art/march_water.jpg",
+	"boss": "res://game/art/march_boss.jpg",
+}
 var _wave_ending := false
 
 var hud: CanvasLayer
@@ -88,6 +98,27 @@ func _draw_bg(canvas: Node2D) -> void:
 	var top := Color(String(theme_colors.get("sky_top", "1b2440")))
 	var bottom := Color(String(theme_colors.get("sky_bottom", "3d3154")))
 	var ground := Color(String(theme_colors.get("ground", "2e2a3d")))
+	if bg_tex != null:
+		# Painted backdrop (art revamp): scaled to cover the full 1280 view
+		# height, mirror-tiled horizontally so scrolling never shows a seam.
+		var s := 1280.0 / float(bg_tex.get_height())
+		var tile_w := float(bg_tex.get_width()) * s
+		var base := -fposmod(bg_scroll, tile_w * 2.0)
+		for k in range(3):
+			var x := base + float(k) * tile_w
+			if x > VIEW_W or x + tile_w < 0.0:
+				continue
+			if k % 2 == 1:
+				canvas.draw_set_transform(Vector2(x + tile_w, 0.0), 0.0, Vector2(-1, 1))
+				canvas.draw_texture_rect(bg_tex, Rect2(0, 0, tile_w, 1280), false)
+				canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			else:
+				canvas.draw_texture_rect(bg_tex, Rect2(x, 0, tile_w, 1280), false)
+		for r: Dictionary in rocks:
+			canvas.draw_set_transform(Vector2(r["x"], r["y"]), 0.0, Vector2(1.0, 0.3))
+			canvas.draw_circle(Vector2.ZERO, r["r"], ground.darkened(0.35))
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 	canvas.draw_rect(Rect2(0, 0, VIEW_W, GROUND_Y * 0.5), top)
 	canvas.draw_rect(Rect2(0, GROUND_Y * 0.5, VIEW_W, GROUND_Y * 0.5), bottom)
 	canvas.draw_circle(Vector2(600, 250), 44, Color("f5e6b8", 0.9))
@@ -217,6 +248,8 @@ func _start_wave() -> void:
 	wave_distance = 0.0
 	spawn_timer = 0.6
 	theme_colors = themes[Game.current_theme()]
+	var art_path: String = BG_ART.get(Game.current_theme(), "")
+	bg_tex = load(art_path) if art_path != "" and ResourceLoader.exists(art_path) else null
 	bg.queue_redraw()
 	fg.queue_redraw()
 	goal_marker.queue_redraw()
@@ -261,6 +294,7 @@ func _process(delta: float) -> void:
 		_complete_wave()
 
 func _scroll_world(px: float) -> void:
+	bg_scroll += px * 0.12
 	for r: Dictionary in rocks:
 		r["x"] -= px
 		if r["x"] < -60.0:

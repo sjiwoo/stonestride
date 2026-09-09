@@ -74,6 +74,15 @@ func _weapon_row(id: String) -> VBoxContainer:
 	var col := Color(String(d["color"]))
 	var box: VBoxContainer = UiKit.vbox(6)
 	var head: HBoxContainer = UiKit.hbox(8)
+	var emblem_path := "res://game/art/emblem_%s.png" % id
+	if ResourceLoader.exists(emblem_path):
+		var tex := TextureRect.new()
+		tex.texture = load(emblem_path)
+		tex.custom_minimum_size = Vector2(48, 48)
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(tex)
 	head.add_child(UiKit.label(d["name"], 24, col))
 	head.add_child(UiKit.label(d["role"], 18, UiKit.TEXT_FAINT))
 	box.add_child(head)

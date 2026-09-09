@@ -9,6 +9,17 @@ var haptics := true
 
 func _ready() -> void:
 	load_settings()
+	if "--background" in OS.get_cmdline_user_args():
+		# QA/autoshot runs: keep rendering but never take focus or appear on
+		# screen. Launch with CLI `--position 10000,80` too so the window is
+		# off-screen during boot. Never minimize instead — a minimized window
+		# throttles the swapchain and screenshot runs hang or slow ~10x.
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_NO_FOCUS, true)
+		var edge := 0
+		for i in DisplayServer.get_screen_count():
+			edge = maxi(edge, DisplayServer.screen_get_position(i).x
+				+ DisplayServer.screen_get_size(i).x)
+		DisplayServer.window_set_position(Vector2i(edge + 60, 80))
 
 func load_settings() -> void:
 	var cfg := ConfigFile.new()

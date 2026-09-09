@@ -52,5 +52,7 @@ void fragment() {
 	// Vignette.
 	float vig = smoothstep(0.95, 0.35, length(uv - vec2(0.5, 0.5)));
 	col *= mix(0.72, 1.0, vig);
-	COLOR = vec4(col, 1.0);
+	// Respect the CanvasItem modulate (COLOR carries vertex color * modulate),
+	// so the overlay can blend this pass over a painted backdrop.
+	COLOR = vec4(col, 1.0) * COLOR;
 }

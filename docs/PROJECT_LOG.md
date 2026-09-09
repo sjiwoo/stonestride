@@ -68,17 +68,43 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 
 - Graphics revamp with Nano Banana (asked 2026-09-09): revamp the graphics
   toward a consistent, modern, artsy, beautiful theme using AI-generated
-  raster art. **Standing workflow rule:** the owner generates all AI images
-  themselves in the Gemini web app (browser subscription) — agents write
-  copy-paste prompts and integrate the results; agents must NOT call the
-  Gemini API. Prompt sheet + art direction ("Moonlit Megalith") + integration
-  plan: `docs/ART_PROMPTS.md`. Owner drops generated PNGs into `art/src/`.
+  raster art. Art direction ("Moonlit Megalith") + prompts: `docs/ART_PROMPTS.md`.
+- **Superseded** (same day): the browser-only generation workflow. New
+  standing rule: agents MAY call the Gemini API (owner's key) but must be
+  cost-efficient — combine assets into one sprite-sheet generation where
+  slicing is safe, default to 1K resolution, use the cheapest model that
+  meets quality (`gemini-3.1-flash-lite-image` for emblems/icons,
+  `gemini-3.1-flash-image` for hero scenery), and state the estimated cost
+  before running a batch.
 
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
 
-- 2026-09-09 · `docs` · Graphics-revamp ask recorded. Added
+- 2026-09-09 · `(this commit)` · Background QA launches (owner ask: never
+  switch/steal the owner's window). `settings.gd` now honors a `--background`
+  user arg: NO_FOCUS window flag + park past the rightmost monitor edge.
+  Launch windowed QA runs with `--position 10000,80 -- --background`
+  (documented in README + CLAUDE.md). Never minimize — it throttles the
+  swapchain and hangs shot runs.
+- 2026-09-09 · `(this commit)` · Art revamp round 1 integrated. Nine
+  Nano Banana images generated via the Gemini API (~$0.54: 7x
+  `gemini-3.1-flash-image`, 2x lite; masters in `art/src/`, game copies in
+  `game/art/`). Main menu: painted key art background (golem under the moon)
+  with slow ken-burns drift, buttons moved to the bottom; procedural
+  golem/ground kept as fallback when art is absent. March: per-theme painted
+  backdrops (wastes/fire/forest/water/boss) drawn mirror-tiled with slow
+  parallax in `_draw_bg`; procedural sky/hills remain as fallback; ground
+  rocks still code-drawn. Path map: painted mountain-journey backdrop under
+  the `map_terrain` shader, which now respects modulate (was hardcoded
+  opaque) and blends at 0.25 as a haze/vignette/ridge pass. Draft cards:
+  carved-stone category emblems (attack/econ/speed) on a dark plaque.
+  Armory: weapon emblems (cannon/mortar/javelin) beside line names. App
+  icon replaced (`ios_icon_1024.png`, `game/art/icon_512.png`, project
+  icon). Emblems sliced from one generated sprite sheet; scenery stored as
+  JPEG (game/art ~1.4 MB). Tests 5,098 pass; 8-shot suite verified; repo
+  screenshots refreshed. Web build deployed to gh-pages.
+- 2026-09-09 · `83ff197` · Graphics-revamp ask recorded. Added
   `docs/ART_PROMPTS.md`: "Moonlit Megalith" art direction, 14 Nano Banana
   prompts (menu key art, 5 themed march backdrops, path-map backdrop, 6
   emblems, app icon) with exact filenames/ratios, owner browser workflow,
