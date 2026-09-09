@@ -15,12 +15,12 @@ func _ready() -> void:
 	v.offset_left = 60
 	v.offset_right = -60
 	add_child(v)
-	var title: Label = UiKit.label("Victory" if victory else "The golem falls", 60,
+	var title: Label = UiKit.label("Victory" if victory else "The march ends", 60,
 		UiKit.GOOD if victory else UiKit.BAD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
 	var sub: Label = UiKit.label(
-		"The horde's champion is rubble." if victory else "The swarm drags it down at last.",
+		"The horde's champion is rubble." if victory else "The swarm drags your champion down at last.",
 		24, UiKit.TEXT_DIM)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(sub)
@@ -28,7 +28,7 @@ func _ready() -> void:
 	var stats: PanelContainer = UiKit.panel()
 	var sv: VBoxContainer = UiKit.vbox(10)
 	stats.add_child(sv)
-	sv.add_child(_stat_row("Waves survived", str(s.get("wave", 1))))
+	sv.add_child(_stat_row("Checkpoints reached", str(s.get("wave", 1))))
 	sv.add_child(_stat_row("Distance marched", "%d m" % int(s.get("distance", 0))))
 	sv.add_child(_stat_row("Monsters squashed", str(s.get("kills", 0))))
 	sv.add_child(_stat_row("Gold earned", "%d g" % int(s.get("gold", 0))))

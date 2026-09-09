@@ -164,16 +164,23 @@ class MapView extends Control:
 		for c in get_children():
 			c.queue_free()
 		_add_embers()
-		# 3D flame ring around the boss waystone, reusing FlameFrame.
-		var boss_r: int = overlay.map.rows.size() - 1
-		var bp: Vector2 = _pos["%d:0" % boss_r]
-		var holder := Control.new()
-		holder.custom_minimum_size = Vector2(BOSS_R, BOSS_R) * 2.0
-		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_boss_flame = FlameFrame.wrap(holder, Color("e2372f"), 0.45, 26.0, BOSS_R)
-		_boss_flame.position = bp - Vector2(BOSS_R + 26.0, BOSS_R + 26.0)
-		_boss_flame.size = Vector2(BOSS_R + 26.0, BOSS_R + 26.0) * 2.0
-		add_child(_boss_flame)
+		# 3D flame ring around the NEXT boss gate ahead of the player (the
+		# endless map has one every act; flame only the upcoming one so the
+		# ever-growing map never accumulates heavy SubViewport nodes).
+		_boss_flame = null
+		var r0 := maxi(overlay.current_row, 0)
+		for r in range(r0, mini(overlay.map.rows.size(), r0 + 12)):
+			var row: Array = overlay.map.rows[r]
+			if row.size() == 1 and (overlay.map.node_at(r, 0)).theme == "boss":
+				var bp: Vector2 = _pos["%d:0" % r]
+				var holder := Control.new()
+				holder.custom_minimum_size = Vector2(BOSS_R, BOSS_R) * 2.0
+				holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				_boss_flame = FlameFrame.wrap(holder, Color("e2372f"), 0.45, 26.0, BOSS_R)
+				_boss_flame.position = bp - Vector2(BOSS_R + 26.0, BOSS_R + 26.0)
+				_boss_flame.size = Vector2(BOSS_R + 26.0, BOSS_R + 26.0) * 2.0
+				add_child(_boss_flame)
+				break
 		_golem = GolemMarker.new()
 		_golem.size = Vector2(44, 44)
 		_golem.position = _node_pos(maxi(overlay.current_row, 0), overlay.current_index) - _golem.size * 0.5
@@ -211,13 +218,16 @@ class MapView extends Control:
 		dot.fill_to = Vector2(0.5, 0.0)
 		dot.width = 8
 		dot.height = 8
+		# Embers live around the current focus area, not the whole endless map.
+		pm.emission_box_extents = Vector3(size.x * 0.5, minf(size.y, 1500.0) * 0.5, 1.0)
 		var p := GPUParticles2D.new()
 		p.process_material = pm
 		p.texture = dot
 		p.amount = 46
 		p.lifetime = 7.0
 		p.preprocess = 7.0
-		p.position = size * 0.5
+		p.position = Vector2(size.x * 0.5,
+			_node_pos(maxi(overlay.current_row, 0), overlay.current_index).y)
 		add_child(p)
 
 	func _node_pos(r: int, i: int) -> Vector2:

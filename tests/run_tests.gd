@@ -7,6 +7,7 @@ const RunState := preload("res://game/sim/run_state.gd")
 const DraftSystem := preload("res://game/sim/draft_system.gd")
 const PathMap := preload("res://game/sim/path_map.gd")
 const Armory := preload("res://game/sim/armory.gd")
+const WaveGen := preload("res://game/sim/wave_gen.gd")
 
 var failures := 0
 var checks := 0
@@ -17,6 +18,8 @@ func _init() -> void:
 	test_draft_no_duplicates()
 	test_path_map_structure()
 	test_path_map_connectivity()
+	test_path_map_determinism()
+	test_wave_gen()
 	test_run_state_effects()
 	test_march_speed_bounds()
 	test_armory_gating()
@@ -78,21 +81,27 @@ func test_draft_no_duplicates() -> void:
 
 func test_path_map_structure() -> void:
 	for s in range(30):
-		var rng := RandomNumberGenerator.new()
-		rng.seed = s
 		var m := PathMap.new()
-		m.generate(rng, 10)
-		check(m.rows.size() == 10, "seed %d: expected 10 rows got %d" % [s, m.rows.size()])
+		m.setup(s)
+		m.ensure_rows(35)
+		check(m.rows.size() >= 36, "seed %d: ensure_rows(35) left %d rows" % [s, m.rows.size()])
 		check(m.rows[0].size() == 1, "seed %d: start row not single" % s)
-		check(m.rows[9].size() == 1, "seed %d: boss row not single" % s)
-		check((m.node_at(9, 0)).theme == "boss", "seed %d: last node not boss" % s)
+		check((m.node_at(0, 0)).theme == "neutral", "seed %d: start not neutral" % s)
+		for r in range(1, 36):
+			if r % PathMap.ACT_LEN == PathMap.ACT_LEN - 1:
+				check(m.rows[r].size() == 1, "seed %d: boss row %d not single" % [s, r])
+				check((m.node_at(r, 0)).theme == "boss", "seed %d: row %d not boss" % [s, r])
+			else:
+				check(m.rows[r].size() == 3, "seed %d: row %d not triple" % [s, r])
+				for i in range(m.rows[r].size()):
+					check((m.node_at(r, i)).theme in PathMap.THEMES,
+						"seed %d: row %d bad theme" % [s, r])
 
 func test_path_map_connectivity() -> void:
 	for s in range(50):
-		var rng := RandomNumberGenerator.new()
-		rng.seed = 1000 + s
 		var m := PathMap.new()
-		m.generate(rng, 10)
+		m.setup(1000 + s)
+		m.ensure_rows(25)
 		var reachable := {}
 		reachable[Vector2i(0, 0)] = true
 		for r in range(m.rows.size() - 1):
@@ -107,11 +116,51 @@ func test_path_map_connectivity() -> void:
 			for i in range(m.rows[r].size()):
 				check(reachable.has(Vector2i(r, i)),
 					"seed %d: node r%d i%d unreachable from start" % [s, r, i])
-		check(reachable.has(Vector2i(9, 0)), "seed %d: boss unreachable" % s)
 		for r in range(m.rows.size() - 1):
 			for i in range(m.rows[r].size()):
 				check(not (m.node_at(r, i)).edges.is_empty(),
 					"seed %d: dead end at r%d i%d" % [s, r, i])
+
+func test_path_map_determinism() -> void:
+	for s in range(10):
+		var a := PathMap.new()
+		a.setup(555 + s)
+		var b := PathMap.new()
+		b.setup(555 + s)
+		# Different ensure_rows call patterns must yield the same map.
+		a.ensure_rows(22)
+		for step in [5, 11, 22]:
+			b.ensure_rows(step)
+		for r in range(23):
+			check(a.rows[r].size() == b.rows[r].size(), "seed %d: row %d size differs" % [s, r])
+			for i in range(a.rows[r].size()):
+				check((a.node_at(r, i)).theme == (b.node_at(r, i)).theme,
+					"seed %d: r%d i%d theme differs" % [s, r, i])
+				check((a.node_at(r, i)).edges == (b.node_at(r, i)).edges,
+					"seed %d: r%d i%d edges differ" % [s, r, i])
+
+func test_wave_gen() -> void:
+	var prev := WaveGen.cfg(1)
+	check(not bool(prev["boss"]), "wave 1 must not be a boss")
+	for n in range(2, 121):
+		var c: Dictionary = WaveGen.cfg(n)
+		check(float(c["goal_m"]) >= float(prev["goal_m"]) - 0.0001,
+			"wave %d: goal must be non-decreasing" % n)
+		check(float(c["goal_m"]) <= 220.0001, "wave %d: goal capped at 220" % n)
+		check(float(c["spawn_interval"]) <= float(prev["spawn_interval"]) + 0.0001,
+			"wave %d: spawn interval must not grow" % n)
+		check(float(c["spawn_interval"]) >= 0.4 - 0.0001, "wave %d: interval floor" % n)
+		check(float(c["hp_mult"]) > float(prev["hp_mult"]),
+			"wave %d: hp must keep compounding" % n)
+		check(bool(c["boss"]) == (n % WaveGen.BOSS_EVERY == 0),
+			"wave %d: boss cadence wrong" % n)
+		var types: Dictionary = c["types"]
+		var total := 0.0
+		for k: String in types:
+			check(float(types[k]) >= 0.0, "wave %d: negative weight" % n)
+			total += float(types[k])
+		check(total > 0.0, "wave %d: no spawnable types" % n)
+		prev = c
 
 func test_run_state_effects() -> void:
 	var run := RunState.new()
@@ -140,7 +189,6 @@ func test_march_speed_bounds() -> void:
 func test_data_integrity() -> void:
 	var cards: Array = DraftSystem._load_json("res://game/data/cards.json")["cards"]
 	var themes: Dictionary = DraftSystem._load_json("res://game/data/themes.json")["themes"]
-	var waves: Array = DraftSystem._load_json("res://game/data/waves.json")["waves"]
 	var probe := RunState.new()
 	for card: Dictionary in cards:
 		check(card["category"] in ["attack", "speed", "econ"], "%s: bad category" % card["id"])
@@ -162,12 +210,6 @@ func test_data_integrity() -> void:
 		var w: Dictionary = themes[t]["weights"]
 		var total: float = w["attack"] + w["speed"] + w["econ"]
 		check(absf(total - 100.0) < 0.001, "theme %s weights must sum to 100" % t)
-	var prev_goal := 0.0
-	for i in range(waves.size()):
-		check(int(waves[i]["wave"]) == i + 1, "wave numbering broken at %d" % i)
-		check(float(waves[i]["goal_m"]) > prev_goal, "wave goals must increase")
-		prev_goal = float(waves[i]["goal_m"])
-	check(bool(waves[waves.size() - 1].get("boss", false)), "final wave must be a boss")
 
 func _make_armory() -> Armory:
 	var a := Armory.new()

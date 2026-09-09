@@ -6,12 +6,14 @@ const PathMap := preload("res://game/sim/path_map.gd")
 const DraftSystem := preload("res://game/sim/draft_system.gd")
 const Armory := preload("res://game/sim/armory.gd")
 
-const TOTAL_WAVES := 10
+## Per-checkpoint permanent march-speed ramp: the run visibly accelerates.
+const SPEED_RAMP := 2.0
 
 var run: RunState
 var map: PathMap
 var drafts: DraftSystem
 var armory: Armory
+var character := "golem"
 var current_row := 0
 var current_index := 0
 var path_history: Array[int] = []
@@ -25,7 +27,7 @@ func start_run(seed_value: int = -1) -> void:
 	run = RunState.new()
 	run.run_seed = seed_value
 	map = PathMap.new()
-	map.generate(rng, TOTAL_WAVES)
+	map.setup(seed_value)
 	drafts = DraftSystem.new()
 	drafts.setup(rng, "res://game/data/cards.json", "res://game/data/themes.json")
 	armory = Armory.new()
@@ -45,6 +47,7 @@ func advance_to(next_index: int) -> void:
 	current_index = next_index
 	path_history.append(next_index)
 	run.wave += 1
+	run.base_speed += SPEED_RAMP
 
 func end_run(victory: bool) -> void:
 	last_summary = {

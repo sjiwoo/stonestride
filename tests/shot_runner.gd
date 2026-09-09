@@ -25,9 +25,9 @@ func _run() -> void:
 	await _settle(1.6)
 	await _capture("03_waystone.png")
 	march.wave_distance = 999999.0
-	await _settle(0.55)
-	await _capture("04_rout.png")
-	await _settle(1.8)
+	await _settle(0.3)
+	await _capture("04_checkpoint.png")
+	await _settle(0.9)
 	await _capture("05_draft.png")
 	var overlay: Node = null
 	for child in march.get_children():
@@ -67,6 +67,9 @@ func _run() -> void:
 	march.wave_cfg["goal_m"] = 100000.0
 	await _settle(5.0)
 	await _capture("08_maxed_build.png")
+	Router.goto("res://game/scenes/select_menu.tscn", true)
+	await _settle(1.0)
+	await _capture("09_select.png")
 	print("SCREENSHOTS_DONE")
 	get_tree().quit()
 

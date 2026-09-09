@@ -1,6 +1,9 @@
 extends RefCounted
-## Slay-the-Spire style branching map. Row 0 = start, last row = boss.
-## Every node is guaranteed on a start-to-boss path by construction.
+## Endless Slay-the-Spire style branching map, generated lazily row by row
+## from the run seed (deterministic append order). Rows repeat in acts of
+## ACT_LEN: row 0 is the neutral start, every row where r % ACT_LEN ==
+## ACT_LEN - 1 is a single boss gate, everything else is a triple. Every
+## node is guaranteed on a forward path by construction (no dead ends).
 
 class MapNode:
 	var theme: String
@@ -13,21 +16,31 @@ class MapNode:
 var rows: Array = []
 
 const THEMES := ["fire", "forest", "water"]
+const ACT_LEN := 10
 
-func generate(rng: RandomNumberGenerator, waves: int) -> void:
-	rows = []
-	var start := MapNode.new("neutral")
-	rows.append([start])
-	for r in range(1, waves - 1):
-		var row: Array = []
+var _rng: RandomNumberGenerator
+
+func setup(seed_value: int) -> void:
+	_rng = RandomNumberGenerator.new()
+	_rng.seed = seed_value
+	rows = [[MapNode.new("neutral")]]
+
+func ensure_rows(upto_row: int) -> void:
+	while rows.size() <= upto_row:
+		_append_row()
+
+func _append_row() -> void:
+	var r := rows.size()
+	var row: Array = []
+	if r % ACT_LEN == ACT_LEN - 1:
+		row.append(MapNode.new("boss"))
+	else:
 		for _i in range(3):
-			var node := MapNode.new(THEMES[rng.randi() % THEMES.size()])
-			node.elite = r >= 4 and rng.randf() < 0.18
+			var node := MapNode.new(THEMES[_rng.randi() % THEMES.size()])
+			node.elite = (r % ACT_LEN) >= 4 and _rng.randf() < 0.18
 			row.append(node)
-		rows.append(row)
-	rows.append([MapNode.new("boss")])
-	for r in range(rows.size() - 1):
-		_connect_rows(rng, r)
+	rows.append(row)
+	_connect_rows(_rng, rows.size() - 2)
 
 func _connect_rows(rng: RandomNumberGenerator, r: int) -> void:
 	var cur: Array = rows[r]
@@ -54,9 +67,8 @@ func node_at(row: int, index: int) -> MapNode:
 	return rows[row][index]
 
 func reachable(row: int, index: int) -> Array:
+	ensure_rows(row + 1)
 	var result: Array = []
-	if row + 1 >= rows.size():
-		return result
 	for j: int in (rows[row][index] as MapNode).edges:
 		result.append({"index": j, "node": rows[row + 1][j]})
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["index"] < b["index"])

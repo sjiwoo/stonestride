@@ -6,6 +6,7 @@ const PATH := "user://settings.cfg"
 var music_volume := 0.8
 var sfx_volume := 1.0
 var haptics := true
+var last_character := "golem"
 
 func _ready() -> void:
 	load_settings()
@@ -27,12 +28,14 @@ func load_settings() -> void:
 		music_volume = cfg.get_value("audio", "music", 0.8)
 		sfx_volume = cfg.get_value("audio", "sfx", 1.0)
 		haptics = cfg.get_value("feel", "haptics", true)
+		last_character = cfg.get_value("run", "character", "golem")
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("audio", "music", music_volume)
 	cfg.set_value("audio", "sfx", sfx_volume)
 	cfg.set_value("feel", "haptics", haptics)
+	cfg.set_value("run", "character", last_character)
 	cfg.save(PATH)
 
 func vibrate(ms: int) -> void:

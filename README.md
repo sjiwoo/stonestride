@@ -1,9 +1,11 @@
 # Stonestride
 
-iOS roguelike wave-defense: your base is a walking stone golem. March each wave's
-distance while tiny monsters latch on and slow you, draft an upgrade card after
-every wave, then choose a themed path that biases your next draft — all routes
-converge on the wave-10 boss.
+iOS roguelike wave-defense: your base is a walking champion — a stone golem,
+a viking longship, or a stubby tank — crewed by Battle-Cats-style cat
+gunners. The march is ENDLESS: reaching each checkpoint waystone opens an
+upgrade draft, a themed path choice, and the armory, but enemies are never
+cleared and the world never resets — you keep marching, a little faster
+after every checkpoint, with a boss gating every 10th one.
 
 ## Run it (no editor needed)
 
@@ -20,20 +22,27 @@ flags so the game window never appears on screen or steals focus):
 
     game/autoload/   Settings (user://settings.cfg), Game (run orchestration),
                      Router (radial-wipe scene transitions)
-    game/sim/        Pure logic, no nodes: RunState, DraftSystem, PathMap
+    game/sim/        Pure logic, no nodes: RunState, DraftSystem,
+                     PathMap (endless, lazily generated), WaveGen (endless waves)
+    game/scenes/     characters/ (sprite-rigged golem/ship/tank), march
+                     gameplay, select/menus, draft/path/armory overlays, UiKit
+    game/art/        painted backdrops + sprites/ (sliced Nano Banana sheets)
     game/data/       cards.json (17 cards), themes.json (path odds + palettes),
-                     waves.json (10 waves)
-    game/scenes/     Golem (procedural articulated walk), march gameplay,
-                     menus, draft/path/pause overlays, UiKit helpers
-    tests/           run_tests.gd (4,992 checks), shot_runner.gd
+                     weapons.json (weapon tree)
+    art/src/         AI art masters (gdignored by the engine)
+    tests/           run_tests.gd (19,352 checks), shot_runner.gd
 
 ## Design invariants (enforced by tests)
 
 - Drafts are deterministic per seed; theme odds hold within 5% over 6k draws
-- Path maps: rows == waves, start and boss rows single, every node reachable
-  from start, no dead ends, boss reachable on all 50 tested seeds
-- March speed is monotone non-increasing in latched enemies, floored at 20%
-- latch_resist clamps at 0.85; wave goals strictly increase; final wave is boss
+- Endless path map: generated lazily, deterministic per seed regardless of
+  ensure_rows call pattern; boss gate every 10th row (single node), other
+  rows triple; every node reachable from start, no dead ends
+- WaveGen: goals non-decreasing (capped 220 m), spawn interval non-growing
+  (floor 0.4 s), hp compounds forever, boss exactly every 10th wave
+- March speed is monotone non-increasing in latched enemies, floored at 20%;
+  base speed permanently ramps +2 px/s at every checkpoint
+- latch_resist clamps at 0.85
 
 ## iOS export notes
 

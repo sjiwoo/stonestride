@@ -30,7 +30,7 @@ func _ready() -> void:
 		ground.anchor_top = 1.0
 		ground.offset_top = -240
 		add_child(ground)
-		var golem := Golem.new()
+		var golem := BaseCharacter.create("golem")
 		golem.position = Vector2(360, 1070)
 		golem.scale = Vector2(0.9, 0.9)
 		golem.walk_speed_visual = 0.35
@@ -57,8 +57,7 @@ func _ready() -> void:
 	add_child(buttons)
 	var start := UiKit.primary_button("Start run")
 	start.pressed.connect(func() -> void:
-		Game.start_run()
-		Router.goto("res://game/scenes/march.tscn"))
+		Router.goto("res://game/scenes/select_menu.tscn"))
 	buttons.add_child(start)
 	var settings_btn := UiKit.ghost_button("Settings")
 	settings_btn.pressed.connect(func() -> void:

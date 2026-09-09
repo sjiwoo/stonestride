@@ -77,9 +77,41 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   `gemini-3.1-flash-image` for hero scenery), and state the estimated cost
   before running a batch.
 
+- Big update (asked 2026-09-09): THREE selectable characters — the golem
+  (now sprites, not vectors), a cartoony viking ship, and a tank — with
+  Battle-Cats-style animations. All towers become cat-themed sprites in the
+  Battle Cats look, line thickness matching the art (reasonably thick).
+  Architecture: levels are ENDLESS and procedurally generated; reaching a
+  waystone is a checkpoint (draft + path + armory as before) but enemies
+  are NOT deleted and nothing resets — the march continues to the next
+  checkpoint, and pace speeds up for clear progression.
+
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
+
+- 2026-09-09 · `(this commit)` · Characters + cat towers + endless runs.
+  Three Nano Banana sprite sheets ($0.20 API total; magenta chroma-key +
+  connected-component slicing into `game/art/sprites/`). New
+  `game/scenes/characters/`: BaseCharacter (factory, sprite/pivot helpers)
+  with sprite-rigged GolemChar (same sine gait as the old vector rig, now
+  parts + squash), ShipChar (viking longship, bob/rock/sail sway), TankChar
+  (tread-bounce). Old vector `golem.gd` deleted; march/menu use
+  BaseCharacter. New character-select screen (`select_menu`) after Start
+  run; choice persisted in settings. Turrets are Battle-Cats-style cat
+  sprites (cannon/mortar/javelin) that lean toward targets and recoil with
+  squash; branch = glow disc, level 2 = bigger cat. ENDLESS architecture:
+  `wave_gen.gd` (formula waves: goal cap 220 m, interval floor 0.4 s, hp
+  compounds, boss every 10th), `path_map.gd` rewritten as an endless lazy
+  act-based map (setup/ensure_rows, deterministic per seed), waves.json
+  deleted. Checkpoints do NOT clear enemies or reset the world — coins
+  magnet in, a 0.45 s beat, then draft/path/armory over paused combat, then
+  the same swarm resumes. Pace: +2 px/s base speed per checkpoint.
+  path_overlay flames only the next boss gate (endless maps would pile up
+  SubViewports); embers localized to the focus area. End screen reworded
+  for endless runs. Tests rewritten for the new invariants: 19,352 checks
+  pass. Shot suite: 04 is now the checkpoint (enemies alive), 09_select
+  added; repo screenshots refreshed (+05_select). Web build deployed.
 
 - 2026-09-09 · `(this commit)` · Background QA launches (owner ask: never
   switch/steal the owner's window). `settings.gd` now honors a `--background`

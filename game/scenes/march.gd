@@ -1,6 +1,11 @@
 extends Node2D
-## The march: golem auto-walks right, enemies mob its front and slow it, turrets fire,
-## reaching the wave's distance goal opens the draft, then the path choice.
+## The march: the chosen champion auto-walks right, enemies mob its front and
+## slow it, turret cats fire. The run is ENDLESS: reaching a wave's distance
+## goal is a checkpoint (draft, path choice, armory) — enemies are NOT
+## cleared and the world never resets; the march resumes toward the next
+## checkpoint, a little faster each time.
+
+const WaveGen := preload("res://game/sim/wave_gen.gd")
 
 const GROUND_Y := 1000.0
 const GOLEM_X := 250.0
@@ -8,7 +13,6 @@ const FRONT_OFFSET := 80.0
 const VIEW_W := 720.0
 
 var run: RefCounted
-var wave_cfgs: Array = []
 var themes: Dictionary = {}
 var wave_cfg: Dictionary = {}
 var wave_distance := 0.0
@@ -20,7 +24,7 @@ var fields: Array = []
 var _shake := 0.0
 var _paused_for_overlay := false
 
-var golem: Golem
+var golem: BaseCharacter
 var bg: Node2D
 var fg: Node2D
 var goal_marker: Node2D
@@ -40,7 +44,7 @@ const BG_ART := {
 	"water": "res://game/art/march_water.jpg",
 	"boss": "res://game/art/march_boss.jpg",
 }
-var _wave_ending := false
+var _checkpoint_pending := false
 
 var hud: CanvasLayer
 var dist_fill: ColorRect
@@ -54,7 +58,6 @@ var slam_btn: Button
 func _ready() -> void:
 	run = Game.run
 	assert(run != null, "march loaded without an active run")
-	wave_cfgs = _load_json("res://game/data/waves.json")["waves"]
 	themes = _load_json("res://game/data/themes.json")["themes"]
 	_build_world()
 	_build_hud()
@@ -85,9 +88,8 @@ func _build_world() -> void:
 	goal_marker.position = Vector2(2000, GROUND_Y)
 	goal_marker.draw.connect(_draw_goal_marker.bind(goal_marker))
 	add_child(goal_marker)
-	golem = Golem.new()
+	golem = BaseCharacter.create(Game.character)
 	golem.position = Vector2(GOLEM_X, GROUND_Y)
-	golem.scale = Vector2(1.35, 1.35)
 	add_child(golem)
 	fg = Node2D.new()
 	fg.z_index = 5
@@ -239,12 +241,9 @@ func _mount_turrets() -> void:
 		slot += 1
 
 func _start_wave() -> void:
-	_wave_ending = false
-	for f_v in fields:
-		if is_instance_valid(f_v):
-			f_v.queue_free()
-	fields.clear()
-	wave_cfg = wave_cfgs[run.wave - 1]
+	_checkpoint_pending = false
+	fields = fields.filter(func(f: Variant) -> bool: return is_instance_valid(f))
+	wave_cfg = WaveGen.cfg(run.wave)
 	wave_distance = 0.0
 	spawn_timer = 0.6
 	theme_colors = themes[Game.current_theme()]
@@ -262,9 +261,6 @@ func _process(delta: float) -> void:
 		return
 	enemies = enemies.filter(func(e: Variant) -> bool: return is_instance_valid(e))
 	coins = coins.filter(func(c: Variant) -> bool: return is_instance_valid(c))
-	if _wave_ending:
-		_update_fleeing(delta)
-		return
 	var blocked_count := 0
 	for e: Enemy in enemies:
 		if e.blocked:
@@ -290,8 +286,8 @@ func _process(delta: float) -> void:
 		golem.position.x = GOLEM_X + randf_range(-1.0, 1.0) * _shake * 14.0
 	if run.hp <= 0.0:
 		_finish_run(false)
-	elif wave_distance >= goal:
-		_complete_wave()
+	elif wave_distance >= goal and not _checkpoint_pending:
+		_reach_checkpoint()
 
 func _scroll_world(px: float) -> void:
 	bg_scroll += px * 0.12
@@ -487,35 +483,19 @@ func _update_hud(goal: float) -> void:
 		slam_btn.text = "Slam %d%%" % int(run.slam_charge)
 		slam_btn.modulate = Color(1, 1, 1, 0.8)
 
-func _complete_wave() -> void:
-	if Game.current_row >= Game.map.rows.size() - 1:
-		_finish_run(true)
-		return
-	_wave_ending = true
-	golem.walk_speed_visual = 0.0
-	for e_v in enemies:
-		if is_instance_valid(e_v):
-			var e: Enemy = e_v
-			e.fleeing = true
-			e.blocked = false
+func _reach_checkpoint() -> void:
+	# Endless flow: no rout, no enemy clear, no world reset. Sweep loose coins
+	# in, take a short beat so the waystone reads, then open the draft with
+	# the swarm still pressing (time pauses under the overlays).
+	_checkpoint_pending = true
+	Settings.vibrate(20)
 	for c_v in coins:
 		if is_instance_valid(c_v):
 			(c_v as Coin).magnet_target = golem
-	_show_draft_after_rout()
+	_show_checkpoint_draft()
 
-func _update_fleeing(delta: float) -> void:
-	for e_v in enemies.duplicate():
-		if not is_instance_valid(e_v):
-			continue
-		var e: Enemy = e_v
-		e.position.x += e.speed * 2.4 * delta
-		e.modulate.a = maxf(0.0, e.modulate.a - delta * 1.1)
-		if e.modulate.a <= 0.0 or e.position.x > 880.0:
-			enemies.erase(e)
-			e.queue_free()
-
-func _show_draft_after_rout() -> void:
-	await get_tree().create_timer(1.25).timeout
+func _show_checkpoint_draft() -> void:
+	await get_tree().create_timer(0.45).timeout
 	_paused_for_overlay = true
 	get_tree().paused = true
 	var overlay := DraftOverlay.new()
@@ -529,6 +509,7 @@ func _show_draft_after_rout() -> void:
 func _on_card_chosen(card: Dictionary) -> void:
 	run.apply_card(card)
 	_mount_turrets()
+	Game.map.ensure_rows(Game.current_row + 8)
 	var overlay := PathOverlay.new()
 	overlay.choices = Game.choices_for_next_wave()
 	overlay.drafts = Game.drafts
