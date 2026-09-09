@@ -85,6 +85,10 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   waystone is a checkpoint (draft + path + armory as before) but enemies
   are NOT deleted and nothing resets — the march continues to the next
   checkpoint, and pace speeds up for clear progression.
+  **Partially superseded 2026-09-10:** owner reverted the enemy-persistence
+  part — reaching a checkpoint DOES rout/clear all enemies again (flee +
+  fade, spawning paused during the beat). The endless no-reset march
+  otherwise stands.
 
 - Visual refresh via ComfyUI (asked 2026-09-10): more sprite updates —
   enemies, UI elements, towers (checkpoint waystone), buttons — generated on
@@ -100,6 +104,12 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
+
+- 2026-09-10 · `(this commit)` · Checkpoint rout restored (owner ask):
+  reaching the waystone routs the swarm again — enemies flee right and
+  fade, spawning pauses during the beat, turrets/taps ignore fleeing
+  enemies, stragglers finish fading into the next wave. Draft opens after
+  a 0.9 s rout beat. The endless no-reset march is unchanged otherwise.
 
 - 2026-09-10 · `(this commit)` · HUD bars, widescreen pop-in, faster pace
   (owner asks). Distance/HP bars are carved-stone groove tracks (one free

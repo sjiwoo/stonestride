@@ -297,6 +297,7 @@ func _process(delta: float) -> void:
 		return
 	enemies = enemies.filter(func(e: Variant) -> bool: return is_instance_valid(e))
 	coins = coins.filter(func(c: Variant) -> bool: return is_instance_valid(c))
+	_update_fleeing(delta)
 	var blocked_count := 0
 	for e: Enemy in enemies:
 		if e.blocked:
@@ -352,7 +353,24 @@ func _scroll_world(px: float) -> void:
 	bg.queue_redraw()
 	fg.queue_redraw()
 
+## Routed enemies sprint right and fade out; runs every frame so stragglers
+## finish fleeing smoothly even after the next wave has begun.
+func _update_fleeing(delta: float) -> void:
+	for e_v in enemies.duplicate():
+		if not is_instance_valid(e_v):
+			continue
+		var e: Enemy = e_v
+		if not e.fleeing:
+			continue
+		e.position.x += e.speed * 2.4 * delta
+		e.modulate.a = maxf(0.0, e.modulate.a - delta * 1.1)
+		if e.modulate.a <= 0.0 or e.position.x > _offscreen_x() + 200.0:
+			enemies.erase(e)
+			e.queue_free()
+
 func _update_spawning(delta: float) -> void:
+	if _checkpoint_pending:
+		return
 	spawn_timer -= delta
 	if spawn_timer <= 0.0:
 		spawn_timer = float(wave_cfg["spawn_interval"])
@@ -388,6 +406,8 @@ func _spawn_enemy(kind: String, x: float) -> Enemy:
 func _update_enemies(delta: float, scroll_px: float) -> void:
 	var front_x := golem.position.x + FRONT_OFFSET
 	for e: Enemy in enemies:
+		if e.fleeing:
+			continue
 		var min_x := front_x + e.radius + e.press_offset
 		e.position.x -= (scroll_px + e.speed) * delta
 		if e.position.x <= min_x:
@@ -420,6 +440,8 @@ func nearest_enemy(from: Vector2, max_range: float) -> Enemy:
 		if not is_instance_valid(e_v):
 			continue
 		var e: Enemy = e_v
+		if e.fleeing:
+			continue
 		var d := from.distance_to(e.global_position)
 		if d < best_d:
 			best_d = d
@@ -527,18 +549,23 @@ func _update_hud(goal: float) -> void:
 		slam_btn.modulate = Color(1, 1, 1, 0.8)
 
 func _reach_checkpoint() -> void:
-	# Endless flow: no rout, no enemy clear, no world reset. Sweep loose coins
-	# in, take a short beat so the waystone reads, then open the draft with
-	# the swarm still pressing (time pauses under the overlays).
+	# Reaching the waystone routs the swarm: enemies break, flee right and
+	# fade while loose coins sweep in, then the draft opens. The world
+	# otherwise never resets and the march resumes seamlessly.
 	_checkpoint_pending = true
 	Settings.vibrate(20)
+	for e_v in enemies:
+		if is_instance_valid(e_v):
+			var e: Enemy = e_v
+			e.fleeing = true
+			e.blocked = false
 	for c_v in coins:
 		if is_instance_valid(c_v):
 			(c_v as Coin).magnet_target = golem
 	_show_checkpoint_draft()
 
 func _show_checkpoint_draft() -> void:
-	await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(0.9).timeout
 	_paused_for_overlay = true
 	get_tree().paused = true
 	var overlay := DraftOverlay.new()
