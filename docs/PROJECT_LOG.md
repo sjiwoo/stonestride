@@ -66,10 +66,24 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   path must be **purely visual selection on the map with no text**, with good
   visual effects and animation.
 
+- Graphics revamp with Nano Banana (asked 2026-09-09): revamp the graphics
+  toward a consistent, modern, artsy, beautiful theme using AI-generated
+  raster art. **Standing workflow rule:** the owner generates all AI images
+  themselves in the Gemini web app (browser subscription) — agents write
+  copy-paste prompts and integrate the results; agents must NOT call the
+  Gemini API. Prompt sheet + art direction ("Moonlit Megalith") + integration
+  plan: `docs/ART_PROMPTS.md`. Owner drops generated PNGs into `art/src/`.
+
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
 
+- 2026-09-09 · `docs` · Graphics-revamp ask recorded. Added
+  `docs/ART_PROMPTS.md`: "Moonlit Megalith" art direction, 14 Nano Banana
+  prompts (menu key art, 5 themed march backdrops, path-map backdrop, 6
+  emblems, app icon) with exact filenames/ratios, owner browser workflow,
+  and the integration plan. Created `art/src/` drop folder. No code changes;
+  integration follows once the owner generates round 1.
 - 2026-09-08 · (this commit) · Weapon tree system implemented. New
   `game/data/weapons.json` + `game/sim/armory.gd` (level gating, branch
   exclusivity, gold costs; fully unit-tested). `ArmoryOverlay` opens between
