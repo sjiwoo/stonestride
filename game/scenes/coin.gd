@@ -30,10 +30,21 @@ func try_tap(tap_pos: Vector2) -> bool:
 		return true
 	return false
 
+static var _tex: Texture2D = null
+static var _tex_checked := false
+
 func _draw() -> void:
 	var blink := lifetime < 1.2 and fmod(lifetime, 0.3) < 0.15
 	if blink:
 		return
-	draw_circle(Vector2.ZERO, 9.0, Color("ffd98a"))
-	draw_arc(Vector2.ZERO, 9.0, 0, TAU, 16, Color("b8862e"), 2.0)
-	draw_circle(Vector2.ZERO, 3.5, Color("fff3d6"))
+	if not _tex_checked:
+		_tex_checked = true
+		var p := "res://game/art/sprites/coin.png"
+		if ResourceLoader.exists(p):
+			_tex = load(p)
+	if _tex != null:
+		draw_texture_rect(_tex, Rect2(-12, -12, 24, 24), false)
+	else:
+		draw_circle(Vector2.ZERO, 9.0, Color("ffd98a"))
+		draw_arc(Vector2.ZERO, 9.0, 0, TAU, 16, Color("b8862e"), 2.0)
+		draw_circle(Vector2.ZERO, 3.5, Color("fff3d6"))

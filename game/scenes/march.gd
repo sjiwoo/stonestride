@@ -36,6 +36,7 @@ var fg_rocks: Array = []
 var theme_colors := {}
 var bg_tex: Texture2D = null
 var bg_scroll := 0.0
+var waystone_tex: Texture2D = null
 
 const BG_ART := {
 	"neutral": "res://game/art/march_wastes.jpg",
@@ -69,6 +70,9 @@ static func _load_json(path: String) -> Dictionary:
 	return JSON.parse_string(f.get_as_text())
 
 func _build_world() -> void:
+	var ws_path := "res://game/art/sprites/waystone.png"
+	if ResourceLoader.exists(ws_path):
+		waystone_tex = load(ws_path)
 	bg = Node2D.new()
 	bg.z_index = -10
 	bg.draw.connect(_draw_bg.bind(bg))
@@ -159,11 +163,17 @@ func _draw_fg(canvas: Node2D) -> void:
 
 func _draw_goal_marker(canvas: Node2D) -> void:
 	var accent := Color(String(theme_colors.get("color", "ffb347")))
-	var stone := Color("6e6a80")
-	var line := Color("454157")
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.3))
 	canvas.draw_circle(Vector2.ZERO, 46.0, Color("191624", 0.5))
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if waystone_tex != null:
+		var th := 235.0
+		var tw := th * float(waystone_tex.get_width()) / float(waystone_tex.get_height())
+		canvas.draw_texture_rect(waystone_tex, Rect2(-tw * 0.5, -th + 6.0, tw, th), false)
+		canvas.draw_circle(Vector2(1, -th * 0.62), 26.0, Color(accent, 0.22))
+		return
+	var stone := Color("6e6a80")
+	var line := Color("454157")
 	var pillar := PackedVector2Array([
 		Vector2(-17, 0), Vector2(17, 0), Vector2(12, -192), Vector2(-12, -192)])
 	canvas.draw_colored_polygon(pillar, stone)
@@ -509,8 +519,7 @@ func _show_checkpoint_draft() -> void:
 func _on_card_chosen(card: Dictionary) -> void:
 	run.apply_card(card)
 	_mount_turrets()
-	Game.map.ensure_rows(Game.current_row + 8)
-	var overlay := PathOverlay.new()
+	var overlay := PathPicker.new()
 	overlay.choices = Game.choices_for_next_wave()
 	overlay.drafts = Game.drafts
 	overlay.chosen.connect(_on_path_chosen)

@@ -40,10 +40,10 @@ func _run() -> void:
 	await _capture("06_path.png")
 	var path_overlay: Node = null
 	for child in get_tree().current_scene.get_children():
-		if child is PathOverlay:
+		if child is PathPicker:
 			path_overlay = child
 	if path_overlay != null:
-		path_overlay.chosen.emit(path_overlay.choices[0]["index"])
+		path_overlay.chosen.emit(int(path_overlay.choices[0]["index"]))
 		path_overlay.queue_free()
 	await _settle(0.5)
 	await _capture("07_armory.png")

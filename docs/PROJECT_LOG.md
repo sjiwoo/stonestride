@@ -86,9 +86,37 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
   are NOT deleted and nothing resets — the march continues to the next
   checkpoint, and pace speeds up for clear progression.
 
+- Visual refresh via ComfyUI (asked 2026-09-10): more sprite updates —
+  enemies, UI elements, towers (checkpoint waystone), buttons — generated on
+  the LOCAL ComfyUI/Flux install instead of Nano Banana. **Standing rule:
+  for simple asset updates like these, use local ComfyUI (free); reserve
+  the Gemini API for hero/painterly art.**
+- Path screen (asked 2026-09-10): entering the map hung for a second — fix
+  the error and make the flow more seamless; owner suggested ditching the
+  map. Done: the full-screen journey map was removed in favor of a compact
+  instant route picker (the hitch was the map's 3D flame SubViewport shader
+  compiles).
+
 ## Changelog
 
 Newest first. Format: date · commit(s) · summary.
+
+- 2026-09-10 · `(this commit)` · ComfyUI visual refresh + seamless route
+  picker. Nine assets generated FREE on the local Flux-schnell install
+  (magenta-key pipeline v2: sample the real bg color — Flux renders
+  "magenta" as crimson — flood-fill from borders, strip baked drop-shadows
+  by hue band, largest blob): enemy sprites (grunt/runner/tank imps + boss
+  ogre, code fallback kept), checkpoint waystone tower sprite (goal
+  marker; texture must be loaded in _build_world, NOT inside the draw
+  callback — load() there rendered a white placeholder), gold coin sprite,
+  and carved-stone UI (gold + dark slate 9-patch button plates, stone
+  panel plate) wired through UiKit primary/ghost/panel with flat
+  fallbacks. Path map RETIRED: `path_overlay.gd` deleted (its FlameFrame
+  SubViewport shader compiles caused the ~1 s hang on open); replaced by
+  `path_picker.gd` — an instant bottom-sheet with pulsing waystone glyphs,
+  theme names, draft-bias hints, elite spikes, and the map-backdrop art as
+  a strip. Same chosen(map_index) contract. Tests 19,352 pass; shot suite
+  verified; web build deployed.
 
 - 2026-09-09 · `(this commit)` · Characters + cat towers + endless runs.
   Three Nano Banana sprite sheets ($0.20 API total; magenta chroma-key +
