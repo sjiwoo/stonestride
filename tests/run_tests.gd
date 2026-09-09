@@ -146,7 +146,7 @@ func test_wave_gen() -> void:
 		var c: Dictionary = WaveGen.cfg(n)
 		check(float(c["goal_m"]) >= float(prev["goal_m"]) - 0.0001,
 			"wave %d: goal must be non-decreasing" % n)
-		check(float(c["goal_m"]) <= 220.0001, "wave %d: goal capped at 220" % n)
+		check(float(c["goal_m"]) <= 320.0001, "wave %d: goal capped at 320" % n)
 		check(float(c["spawn_interval"]) <= float(prev["spawn_interval"]) + 0.0001,
 			"wave %d: spawn interval must not grow" % n)
 		check(float(c["spawn_interval"]) >= 0.4 - 0.0001, "wave %d: interval floor" % n)
@@ -177,8 +177,8 @@ func test_run_state_effects() -> void:
 
 func test_march_speed_bounds() -> void:
 	var run := RunState.new()
-	check(absf(run.march_speed_px(0) - 70.0) < 0.0001, "base speed wrong")
-	check(run.march_speed_px(50) >= 70.0 * 0.2 - 0.0001, "speed floor violated")
+	check(absf(run.march_speed_px(0) - 90.0) < 0.0001, "base speed wrong")
+	check(run.march_speed_px(50) >= 90.0 * 0.2 - 0.0001, "speed floor violated")
 	var slowed := run.march_speed_px(3)
 	run.latch_resist = 0.5
 	check(run.march_speed_px(3) > slowed, "latch resist should reduce slowdown")

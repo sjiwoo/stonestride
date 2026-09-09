@@ -48,9 +48,10 @@ const BG_ART := {
 var _checkpoint_pending := false
 
 var hud: CanvasLayer
-var dist_fill: ColorRect
-var dist_track: ColorRect
-var hp_fill: ColorRect
+var dist_fill: Control
+var dist_track: Control
+var hp_fill: Control
+var hp_track: Control
 var wave_label: Label
 var gold_label: Label
 var dist_label: Label
@@ -209,24 +210,16 @@ func _build_hud() -> void:
 	pause_btn.pressed.connect(_on_pause)
 	top.add_child(pause_btn)
 	v.add_child(top)
-	dist_track = ColorRect.new()
-	dist_track.color = Color("2a2540")
-	dist_track.custom_minimum_size = Vector2(0, 14)
+	var dist_bar := _make_bar(34.0, UiKit.GOLD)
+	dist_track = dist_bar["track"]
+	dist_fill = dist_bar["fill"]
 	v.add_child(dist_track)
-	dist_fill = ColorRect.new()
-	dist_fill.color = UiKit.GOLD
-	dist_fill.size = Vector2(0, 14)
-	dist_track.add_child(dist_fill)
 	dist_label = UiKit.label("0m / 60m", 19, UiKit.TEXT_FAINT)
 	v.add_child(dist_label)
-	var hp_track := ColorRect.new()
-	hp_track.color = Color("2a2540")
-	hp_track.custom_minimum_size = Vector2(0, 10)
+	var hp_bar := _make_bar(26.0, UiKit.GOOD)
+	hp_track = hp_bar["track"]
+	hp_fill = hp_bar["fill"]
 	v.add_child(hp_track)
-	hp_fill = ColorRect.new()
-	hp_fill.color = UiKit.GOOD
-	hp_fill.size = Vector2(0, 10)
-	hp_track.add_child(hp_fill)
 	slam_btn = UiKit.button("Slam 0%", Color("3a2430"), Color("e05a4e"), 28)
 	slam_btn.custom_minimum_size = Vector2(220, 110)
 	slam_btn.pressed.connect(_on_slam)
@@ -236,6 +229,39 @@ func _build_hud() -> void:
 	slam_btn.offset_right = -24
 	slam_btn.offset_top = -150
 	slam_btn.offset_bottom = -40
+
+const BAR_INSET := Vector2(13.0, 9.0)
+
+## Carved-stone progress bar: textured groove track + rounded flat fill.
+## Falls back to the old flat rects when the texture is absent.
+func _make_bar(height: float, fill_color: Color) -> Dictionary:
+	var tex_path := "res://game/art/sprites/ui_bar_track.png"
+	var track: Control
+	if ResourceLoader.exists(tex_path):
+		track = Panel.new()
+		var sb := StyleBoxTexture.new()
+		sb.texture = load(tex_path)
+		sb.texture_margin_left = 30.0
+		sb.texture_margin_right = 30.0
+		sb.texture_margin_top = 12.0
+		sb.texture_margin_bottom = 12.0
+		track.add_theme_stylebox_override("panel", sb)
+	else:
+		track = ColorRect.new()
+		(track as ColorRect).color = Color("2a2540")
+	track.custom_minimum_size = Vector2(0, height)
+	var fill := Panel.new()
+	var fsb := StyleBoxFlat.new()
+	fsb.bg_color = fill_color
+	fsb.set_corner_radius_all(int((height - BAR_INSET.y * 2.0) * 0.5))
+	fill.add_theme_stylebox_override("panel", fsb)
+	fill.position = BAR_INSET
+	fill.size = Vector2(0, height - BAR_INSET.y * 2.0)
+	track.add_child(fill)
+	return {"track": track, "fill": fill}
+
+func _bar_fill(fill: Control, track: Control, frac: float) -> void:
+	fill.size.x = maxf(track.size.x - BAR_INSET.x * 2.0, 0.0) * clampf(frac, 0.0, 1.0)
 
 func _mount_turrets() -> void:
 	for m in golem.mount_points:
@@ -264,7 +290,7 @@ func _start_wave() -> void:
 	goal_marker.queue_redraw()
 	wave_label.text = "Wave %d · %s" % [run.wave, String(theme_colors["name"])]
 	if wave_cfg.get("boss", false):
-		boss = _spawn_enemy("boss", 820.0)
+		boss = _spawn_enemy("boss", _offscreen_x() + 40.0)
 
 func _process(delta: float) -> void:
 	if _paused_for_overlay:
@@ -285,8 +311,9 @@ func _process(delta: float) -> void:
 	wave_distance += meters
 	if boss_blocking:
 		wave_distance = minf(wave_distance, goal * 0.97)
+	# Always visible: the waystone glides in from off-screen as you approach
+	# (a fixed 860px cull made it pop into view mid-screen on wide displays).
 	goal_marker.position.x = GOLEM_X + FRONT_OFFSET + (goal - wave_distance) * run.PX_PER_M
-	goal_marker.visible = goal_marker.position.x < 860.0
 	_scroll_world(speed_px * delta)
 	_update_spawning(delta)
 	_update_enemies(delta, speed_px)
@@ -300,7 +327,7 @@ func _process(delta: float) -> void:
 		_reach_checkpoint()
 
 func _scroll_world(px: float) -> void:
-	bg_scroll += px * 0.12
+	bg_scroll += px * 0.16
 	for r: Dictionary in rocks:
 		r["x"] -= px
 		if r["x"] < -60.0:
@@ -330,7 +357,12 @@ func _update_spawning(delta: float) -> void:
 	if spawn_timer <= 0.0:
 		spawn_timer = float(wave_cfg["spawn_interval"])
 		var kind := _pick_enemy_kind()
-		_spawn_enemy(kind, 800.0)
+		_spawn_enemy(kind, _offscreen_x())
+
+## Just past the right edge of the actual canvas, however wide the display is
+## (fixed 800px spawns popped enemies into view mid-screen on widescreen).
+func _offscreen_x() -> float:
+	return maxf(get_viewport_rect().size.x, VIEW_W) + 60.0
 
 func _pick_enemy_kind() -> String:
 	var weights: Dictionary = wave_cfg["types"]
@@ -481,10 +513,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Settings.vibrate(10)
 
 func _update_hud(goal: float) -> void:
-	dist_fill.size.x = dist_track.size.x * clampf(wave_distance / goal, 0.0, 1.0)
+	_bar_fill(dist_fill, dist_track, wave_distance / goal)
 	dist_label.text = "%dm / %dm" % [int(wave_distance), int(goal)]
-	hp_fill.size.x = hp_fill.get_parent().size.x * clampf(run.hp / run.max_hp, 0.0, 1.0)
-	hp_fill.color = UiKit.GOOD if run.hp > run.max_hp * 0.35 else UiKit.BAD
+	_bar_fill(hp_fill, hp_track, run.hp / run.max_hp)
+	var hp_col := UiKit.GOOD if run.hp > run.max_hp * 0.35 else UiKit.BAD
+	(hp_fill.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = hp_col
 	gold_label.text = "%d g" % run.gold
 	if run.slam_charge >= 100.0:
 		slam_btn.text = "SLAM"

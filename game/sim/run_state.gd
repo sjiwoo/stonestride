@@ -13,7 +13,7 @@ var total_distance_m := 0.0
 var slam_charge := 0.0
 var rerolls_per_draft := 1
 
-var base_speed := 70.0
+var base_speed := 90.0
 var speed_mult := 1.0
 var damage_mult := 1.0
 var fire_rate_mult := 1.0

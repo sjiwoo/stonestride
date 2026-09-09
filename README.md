@@ -38,10 +38,10 @@ flags so the game window never appears on screen or steals focus):
 - Endless path map: generated lazily, deterministic per seed regardless of
   ensure_rows call pattern; boss gate every 10th row (single node), other
   rows triple; every node reachable from start, no dead ends
-- WaveGen: goals non-decreasing (capped 220 m), spawn interval non-growing
+- WaveGen: goals non-decreasing (capped 320 m), spawn interval non-growing
   (floor 0.4 s), hp compounds forever, boss exactly every 10th wave
 - March speed is monotone non-increasing in latched enemies, floored at 20%;
-  base speed permanently ramps +2 px/s at every checkpoint
+  base 90 px/s, permanently ramps +3 px/s at every checkpoint
 - latch_resist clamps at 0.85
 
 ## iOS export notes

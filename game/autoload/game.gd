@@ -7,7 +7,7 @@ const DraftSystem := preload("res://game/sim/draft_system.gd")
 const Armory := preload("res://game/sim/armory.gd")
 
 ## Per-checkpoint permanent march-speed ramp: the run visibly accelerates.
-const SPEED_RAMP := 2.0
+const SPEED_RAMP := 3.0
 
 var run: RunState
 var map: PathMap

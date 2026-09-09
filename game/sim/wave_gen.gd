@@ -11,7 +11,7 @@ static func cfg(wave: int) -> Dictionary:
 	var runner_w := minf(20.0 + float(n) * 1.5, 40.0)
 	var tank_w := minf(float(n) * 2.0, 30.0)
 	return {
-		"goal_m": minf(55.0 + 10.0 * float(n - 1), 220.0),
+		"goal_m": minf(90.0 + 14.0 * float(n - 1), 320.0),
 		"spawn_interval": maxf(1.45 * pow(0.94, float(n - 1)), 0.4),
 		"hp_mult": pow(1.15, float(n - 1)),
 		"boss": n % BOSS_EVERY == 0,

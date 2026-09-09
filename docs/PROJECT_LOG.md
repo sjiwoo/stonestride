@@ -101,6 +101,18 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 
 Newest first. Format: date · commit(s) · summary.
 
+- 2026-09-10 · `(this commit)` · HUD bars, widescreen pop-in, faster pace
+  (owner asks). Distance/HP bars are carved-stone groove tracks (one free
+  ComfyUI texture, `ui_bar_track.png`) with rounded fills; flat fallback
+  kept. Widescreen glitch fixed: the waystone had a hardcoded 860px
+  visibility cull (popped into view mid-screen on wide displays) — now
+  always visible and glides in; enemy/boss spawns likewise moved from fixed
+  800/820px to just past the actual canvas right edge (`_offscreen_x`).
+  Pace: base speed 70 → 90 px/s, checkpoint ramp +2 → +3, goals 55+10n
+  (cap 220) → 90+14n (cap 320) — longer marches that finish sooner in
+  wall-clock, with stronger backdrop parallax (0.12 → 0.16). Tests updated
+  (19,352 pass); web build deployed.
+
 - 2026-09-10 · `(this commit)` · ComfyUI visual refresh + seamless route
   picker. Nine assets generated FREE on the local Flux-schnell install
   (magenta-key pipeline v2: sample the real bg color — Flux renders
