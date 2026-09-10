@@ -48,6 +48,12 @@ func _ready() -> void:
 		name_l.position = Vector2(cx - 90, 740)
 		name_l.size = Vector2(180, 30)
 		add_child(name_l)
+		var ab: Dictionary = BaseCharacter.ABILITIES[id]
+		var ab_l: Label = UiKit.label(String(ab["name"]), 18, UiKit.GOLD)
+		ab_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ab_l.position = Vector2(cx - 90, 772)
+		ab_l.size = Vector2(180, 24)
+		add_child(ab_l)
 		var hit := Button.new()
 		hit.flat = true
 		hit.position = Vector2(cx - 95, 470)

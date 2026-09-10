@@ -7,6 +7,12 @@ extends Node2D
 
 const IDS := ["golem", "ship", "tank"]
 const NAMES := {"golem": "Golem", "ship": "Longship", "tank": "Ironclad"}
+## Momentum ability per character: name + one-line hook for the select screen.
+const ABILITIES := {
+	"golem": {"name": "Stampede", "hook": "Charge through the horde"},
+	"ship": {"name": "Broadside", "hook": "Every cat opens fire"},
+	"tank": {"name": "Overdrive", "hook": "Nothing slows the treads"},
+}
 const SCRIPTS := {
 	"golem": "res://game/scenes/characters/golem_char.gd",
 	"ship": "res://game/scenes/characters/ship_char.gd",

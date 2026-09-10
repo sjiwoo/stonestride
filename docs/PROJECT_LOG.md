@@ -105,6 +105,19 @@ this repo in parallel — pull/rebase before pushing, and keep entries factual.
 
 Newest first. Format: date · commit(s) · summary.
 
+- 2026-09-10 · `(this commit)` · Momentum abilities (owner approved the
+  stampede pitch, per-character). The flat Slam is now a momentum meter —
+  kills +7, open road +6/s, bogged down (3+ blockers) -4/s — with a
+  character-specific payoff at 100%: Golem STAMPEDE (3 s, 2.2x speed,
+  ignores slowdown, one heavy trample hit per enemy + hurled ahead; boss
+  takes the hit but stands), Longship BROADSIDE (swarm shoved off the
+  hull + every mounted cat fires a 5-shot volley via Turret.barrage),
+  Ironclad OVERDRIVE (6 s, immune to slow and chip damage, blocked
+  enemies ground under the treads). slam_radius/slam_damage stats now
+  power the abilities (overcharged_core card reworded); ability names
+  shown on the select screen and the HUD button. Tests 19,352 pass; web
+  build deployed.
+
 - 2026-09-10 · `(this commit)` · Checkpoint rout restored (owner ask):
   reaching the waystone routs the swarm again — enemies flee right and
   fade, spawning pauses during the beat, turrets/taps ignore fleeing

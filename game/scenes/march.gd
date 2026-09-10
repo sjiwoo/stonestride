@@ -47,6 +47,14 @@ const BG_ART := {
 }
 var _checkpoint_pending := false
 
+## Momentum ability (replaces the old flat Slam). One meter, three payoffs:
+## golem Stampede (speed burst + trample), ship Broadside (all-cat volley +
+## shove), tank Overdrive (slow-immune tread grinder, no chip damage).
+var ability_name := "Slam"
+var _ability := ""          # active mode: "stampede" | "overdrive" | ""
+var _ability_t := 0.0
+var _trampled := {}
+
 var hud: CanvasLayer
 var dist_fill: Control
 var dist_track: Control
@@ -60,6 +68,7 @@ var slam_btn: Button
 func _ready() -> void:
 	run = Game.run
 	assert(run != null, "march loaded without an active run")
+	ability_name = String(BaseCharacter.ABILITIES.get(Game.character, {}).get("name", "Slam"))
 	themes = _load_json("res://game/data/themes.json")["themes"]
 	_build_world()
 	_build_hud()
@@ -220,7 +229,7 @@ func _build_hud() -> void:
 	hp_track = hp_bar["track"]
 	hp_fill = hp_bar["fill"]
 	v.add_child(hp_track)
-	slam_btn = UiKit.button("Slam 0%", Color("3a2430"), Color("e05a4e"), 28)
+	slam_btn = UiKit.button("%s 0%%" % ability_name, Color("3a2430"), Color("e05a4e"), 28)
 	slam_btn.custom_minimum_size = Vector2(220, 110)
 	slam_btn.pressed.connect(_on_slam)
 	hud.add_child(slam_btn)
@@ -302,9 +311,28 @@ func _process(delta: float) -> void:
 	for e: Enemy in enemies:
 		if e.blocked:
 			blocked_count += 1
+	# Momentum: open road charges the meter, a heavy bog-down bleeds it
+	# (kills still add +7 via RunState.add_kill).
+	if blocked_count == 0:
+		run.slam_charge = minf(run.slam_charge + 6.0 * delta, 100.0)
+	elif blocked_count >= 3 and _ability == "":
+		run.slam_charge = maxf(run.slam_charge - 4.0 * delta, 0.0)
+	if _ability != "":
+		_ability_t -= delta
+		if _ability_t <= 0.0:
+			_ability = ""
+			_trampled.clear()
 	var speed_px: float = run.march_speed_px(blocked_count)
+	match _ability:
+		"stampede":
+			speed_px = run.base_speed * run.speed_mult * 2.2
+			_stampede_trample()
+			_shake = maxf(_shake, 0.35)
+		"overdrive":
+			speed_px = run.march_speed_px(0)
+			_overdrive_grind(delta)
 	var boss_blocking := is_instance_valid(boss)
-	if boss_blocking and boss.blocked:
+	if boss_blocking and boss.blocked and _ability == "":
 		speed_px = 0.0
 	golem.walk_speed_visual = clampf(speed_px / run.base_speed, 0.0, 2.2)
 	var goal := float(wave_cfg["goal_m"])
@@ -413,7 +441,8 @@ func _update_enemies(delta: float, scroll_px: float) -> void:
 		if e.position.x <= min_x:
 			e.position.x = min_x
 			e.blocked = true
-			run.hp -= e.dps * delta
+			if _ability != "overdrive":  # armored treads shrug off the chewing
+				run.hp -= e.dps * delta
 		else:
 			e.blocked = false
 
@@ -490,20 +519,62 @@ func damage_area(center: Vector2, radius: float, dmg: float) -> void:
 			e.take_damage(dmg)
 
 func _on_slam() -> void:
-	if run.slam_charge < 100.0:
+	if run.slam_charge < 100.0 or _ability != "":
 		return
 	run.slam_charge = 0.0
 	Settings.vibrate(40)
 	_shake = 1.0
+	match Game.character:
+		"ship":
+			_broadside()
+		"tank":
+			_ability = "overdrive"
+			_ability_t = 6.0
+		_:
+			_ability = "stampede"
+			_ability_t = 3.0
+			_trampled.clear()
+
+## Stampede: everything the golem barrels into takes one heavy hit and is
+## hurled ahead; the boss takes the hit but holds its ground.
+func _stampede_trample() -> void:
+	var front := golem.position.x + FRONT_OFFSET + 130.0
 	for e_v in enemies.duplicate():
 		if not is_instance_valid(e_v):
 			continue
 		var e: Enemy = e_v
-		if golem.position.distance_to(e.global_position) <= run.slam_radius + e.radius:
+		if e.fleeing or e.position.x > front or _trampled.has(e.get_instance_id()):
+			continue
+		_trampled[e.get_instance_id()] = true
+		var killed := e.take_damage(run.slam_damage * run.damage_mult)
+		if not killed and e != boss:
 			e.blocked = false
-			e.position.x = golem.position.x + FRONT_OFFSET + run.slam_radius + randf_range(30.0, 90.0)
-			e.position.y = clampf(e.position.y, GROUND_Y - 10.0, GROUND_Y + 60.0)
-			e.take_damage(run.slam_damage * run.damage_mult)
+			e.position.x = front + run.slam_radius + randf_range(40.0, 140.0)
+			e.position.y = clampf(e.position.y + randf_range(-14.0, 14.0), GROUND_Y - 10.0, GROUND_Y + 60.0)
+
+## Overdrive: the treads crush whatever presses against the front.
+func _overdrive_grind(delta: float) -> void:
+	for e_v in enemies.duplicate():
+		if not is_instance_valid(e_v):
+			continue
+		var e: Enemy = e_v
+		if e.blocked and not e.fleeing:
+			e.take_damage(run.slam_damage * 0.8 * run.damage_mult * delta)
+
+## Broadside: shove the swarm off the hull and every cat unleashes a volley.
+func _broadside() -> void:
+	for e_v in enemies.duplicate():
+		if not is_instance_valid(e_v):
+			continue
+		var e: Enemy = e_v
+		if e.fleeing or e == boss:
+			continue
+		e.blocked = false
+		e.position.x += run.slam_radius * 0.9 + randf_range(20.0, 80.0)
+	for m in golem.mount_points:
+		for child in m.get_children():
+			if child is Turret:
+				(child as Turret).barrage(5)
 
 func _unhandled_input(event: InputEvent) -> void:
 	var tap_pos := Vector2.ZERO
@@ -541,11 +612,14 @@ func _update_hud(goal: float) -> void:
 	var hp_col := UiKit.GOOD if run.hp > run.max_hp * 0.35 else UiKit.BAD
 	(hp_fill.get_theme_stylebox("panel") as StyleBoxFlat).bg_color = hp_col
 	gold_label.text = "%d g" % run.gold
-	if run.slam_charge >= 100.0:
-		slam_btn.text = "SLAM"
+	if _ability != "":
+		slam_btn.text = ability_name.to_upper() + "!"
+		slam_btn.modulate = Color(1.3, 1.2, 1.0)
+	elif run.slam_charge >= 100.0:
+		slam_btn.text = ability_name.to_upper()
 		slam_btn.modulate = Color(1.15, 1.15, 1.15)
 	else:
-		slam_btn.text = "Slam %d%%" % int(run.slam_charge)
+		slam_btn.text = "%s %d%%" % [ability_name, int(run.slam_charge)]
 		slam_btn.modulate = Color(1, 1, 1, 0.8)
 
 func _reach_checkpoint() -> void:

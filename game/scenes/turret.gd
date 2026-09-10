@@ -63,6 +63,16 @@ func _process(delta: float) -> void:
 		_cooldown = float(stats["cooldown"])
 		_fire(target)
 
+## Broadside support: rapid volley that ignores the normal cooldown.
+func barrage(count: int) -> void:
+	for i in range(count):
+		if march == null or not is_instance_valid(self):
+			return
+		var target: Enemy = march.nearest_enemy(global_position, float(stats["range"]) * 1.5)
+		if target != null:
+			_fire(target)
+		await get_tree().create_timer(0.12).timeout
+
 func _fire(target: Enemy) -> void:
 	var cfg := stats.duplicate()
 	cfg["damage"] = float(stats["damage"]) * march.run.damage_mult
